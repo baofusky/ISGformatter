@@ -8,7 +8,7 @@ st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wid
 
 st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
-# 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネコン関数
+# 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
     title_col, copy_col, dl_col = st.columns([2, 1, 1.2])
     
@@ -348,7 +348,7 @@ with tab1:
         if hm_start_index != -1:
             full_hm_lines = base_cleaned_lines[hm_start_index : hm_start_index + 40]
             
-            # 💡 「CPU Utilization」から「Voltage Sensors」までの行を前方一致で動的に特定
+            # 「CPU Utilization」から「Voltage Sensors」までの行を動的に特定
             start_target_idx = -1
             end_target_idx = -1
             
@@ -360,7 +360,6 @@ with tab1:
                     end_target_idx = idx
                     break
             
-            # 範囲が正しく見つかった場合のみスライスを抽出
             if start_target_idx != -1 and end_target_idx != -1:
                 extracted_hm_lines = full_hm_lines[start_target_idx : end_target_idx + 1]
             else:
@@ -408,13 +407,15 @@ with tab1:
                         if thresholds[1] != "90":
                             hm_commands.append(f"health-monitoring metric memory-util high-critical-threshold {thresholds[1]}")
                     
-                    # 2. アラートフラグ（T / M）判定
+                    # 2. アラートフラグ（T / M / E）判定
                     parts = line_stripped.split('|')
                     if len(parts) >= 2:
                         alerts_section = parts[-1].strip()
+                        
+                        # 💡 【修正点】 T(Trap) に加え、 M(Mail) または E(Email) を柔軟に検知するよう条件を拡張
                         if "T" in alerts_section:
                             hm_commands.append(f"health-monitoring metric {matched_cmd_id} trap enable")
-                        if "M" in alerts_section:
+                        if "M" in alerts_section or "E" in alerts_section:
                             hm_commands.append(f"health-monitoring metric {matched_cmd_id} email enable")
                                 
             hm_generated_text = "\n".join(hm_commands) if hm_commands else "追加コマンドは不要です。"
