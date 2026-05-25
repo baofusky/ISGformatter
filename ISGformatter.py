@@ -10,18 +10,12 @@ st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
-    """
-    ヘッダー行に「📋 コピー」と「📥 ダウンロード」のボタンを横並びで配置し、
-    その直下にテキストエリアを表示する関数
-    """
-    # 1行の中にタイトル、コピーボタン、ダウンロードボタンを配置
     title_col, copy_col, dl_col = st.columns([2, 1, 1.2])
     
     with title_col:
         st.markdown(f"**{label}**")
         
     with copy_col:
-        # コピー用のStreamlit標準ボタン
         if st.button(f"📋 コピーする", key=f"btn_copy_{unique_key}", use_container_width=True):
             escaped_text = json.dumps(text_value)
             js_code = f"""
@@ -47,8 +41,6 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
             st.toast("✅ クリップボードにコピーしました！", icon="📝")
 
     with dl_col:
-        # ダウンロード用のStreamlit標準ボタン
-        # 特定の枠で中身が空、あるいは未検出の警告文の場合はダウンロード不可にする制御
         is_disabled = "は見つかりませんでした" in text_value or "は検出されませんでした" in text_value or not text_value.strip()
         st.download_button(
             label="📥 utf8TXTダウンロード",
@@ -60,7 +52,6 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
             use_container_width=True
         )
 
-    # メインのテキストエリア表示枠 (上のカスタムヘッダーと重複させないようラベルは非表示)
     st.text_area(label, text_value, height=height, key=f"area_{unique_key}", label_visibility="collapsed")
 
 
@@ -190,8 +181,9 @@ with tab1:
                 elif s_line_stripped.startswith("sec-name") and 'last_community' in locals():
                     s_name = s_line_stripped.replace("sec-name", "").strip()
                     communities.append((last_community, s_name))
-                elif s_line_stripped.startswith("target"):
-                    current_target = s_line_stripped.replace("target", "").strip()
+                elif s_line_stripped.startswith("target "):
+                    # 💡 【修正点】target文字列を単純置換せず、行全体からスペースのみを詰めて正しい名前を維持
+                    current_target = re.sub(r'\s+', '', s_line_stripped.replace("target", "", 1))
                     parsed_targets[current_target] = {"ip":"", "port":"162", "tag":current_target, "timeout":"1500", "retries":"3", "sec_name":""}
                 elif current_target:
                     if s_line_stripped.startswith("ip"):
@@ -199,7 +191,8 @@ with tab1:
                     elif s_line_stripped.startswith("udp-port"):
                         parsed_targets[current_target]["port"] = s_line_stripped.replace("udp-port", "").strip()
                     elif s_line_stripped.startswith("tag"):
-                        parsed_targets[current_target]["tag"] = s_line_stripped.replace("tag", "").replace("[", "").replace("]", "").strip()
+                        raw_tag = s_line_stripped.replace("tag", "").replace("[", "").replace("]", "")
+                        parsed_targets[current_target]["tag"] = re.sub(r'\s+', '', raw_tag)
                     elif s_line_stripped.startswith("timeout"):
                         parsed_targets[current_target]["timeout"] = s_line_stripped.replace("timeout", "").strip()
                     elif s_line_stripped.startswith("retries"):
@@ -209,12 +202,14 @@ with tab1:
                         parsed_targets[current_target]["sec_name"] = s_part
                     elif s_line_stripped == "!":
                         current_target = None
-                elif s_line_stripped.startswith("notify"):
-                    current_notify = s_line_stripped.replace("notify", "").strip()
+                elif s_line_stripped.startswith("notify "):
+                    # 💡 【修正点】notify名もプレフィックスを考慮してスペースのみを安全に排除
+                    current_notify = re.sub(r'\s+', '', s_line_stripped.replace("notify", "", 1))
                     parsed_notifies[current_notify] = {"tag": current_notify, "type": "trap"}
                 elif current_notify:
                     if s_line_stripped.startswith("tag"):
-                        parsed_notifies[current_notify]["tag"] = s_line_stripped.replace("tag", "").strip()
+                        raw_ntag = s_line_stripped.replace("tag", "")
+                        parsed_notifies[current_notify]["tag"] = re.sub(r'\s+', '', raw_ntag)
                     elif s_line_stripped.startswith("type"):
                         parsed_notifies[current_notify]["type"] = s_line_stripped.replace("type", "").strip()
                     elif s_line_stripped == "!":
@@ -223,7 +218,7 @@ with tab1:
                     current_vacm_group = s_line_stripped.replace("vacm group", "").strip()
                 elif s_line_stripped.startswith("vacm view"):
                     current_vacm_view = s_line_stripped.replace("vacm view", "").strip()
-                    parsed_views[current_vacm_view] = {"subtree": "", "type": "included"}
+                    parsed_views[current_vacm_view] = {"subtree": "1.3", "type": "included"}
                 elif current_vacm_group:
                     if s_line_stripped.startswith("member"):
                         last_vacm_member = s_line_stripped.replace("member", "").strip()
@@ -245,7 +240,7 @@ with tab1:
                         current_vacm_group = None
                 elif current_vacm_view:
                     if s_line_stripped.startswith("subtree"):
-                        parsed_views[current_vacm_view]["subtree"] = s_line_stripped.replace("subtree", "").strip()
+                        parsed_views[current_vacm_view]["subtree"] = "1.3"
                     elif s_line_stripped in ["included", "excluded"]:
                         parsed_views[current_vacm_view]["type"] = s_line_stripped
                     elif s_line_stripped == "!" and not s_line.startswith(" "):
@@ -257,14 +252,18 @@ with tab1:
                 snmp_commands.append(f"snmp community {comm_name}")
                 
                 for t_name, t_info in parsed_targets.items():
-                    if t_info["sec_name"] == sec_name or t_name.lower() in comm_name.lower() or comm_name.lower() in t_info["sec_name"].lower():
+                    clean_t_name = re.sub(r'\s+', '', t_name)
+                    clean_tag = re.sub(r'\s+', '', t_info['tag'])
+                    
+                    if t_info["sec_name"] == sec_name or clean_t_name.lower() in comm_name.lower() or comm_name.lower() in t_info["sec_name"].lower():
                         snmp_commands.append(
-                            f"snmp target {t_name} ip {t_info['ip']} udp-port {t_info['port']} "
-                            f"tag {t_info['tag']} timeout {t_info['timeout']} retries {t_info['retries']} "
+                            f"snmp target {clean_t_name} ip {t_info['ip']} udp-port {t_info['port']} "
+                            f"tag {clean_tag} timeout {t_info['timeout']} retries {t_info['retries']} "
                             f"{agent_version} sec-name {t_info['sec_name']}"
                         )
-                        if t_name in parsed_notifies:
-                            snmp_commands.append(f"snmp notify {t_name} tag {parsed_notifies[t_name]['tag']} type {parsed_notifies[t_name]['type']}")
+                        if clean_t_name in parsed_notifies:
+                            clean_notif_tag = re.sub(r'\s+', '', parsed_notifies[clean_t_name]['tag'])
+                            snmp_commands.append(f"snmp notify {clean_t_name} tag {clean_notif_tag} type {parsed_notifies[clean_t_name]['type']}")
                 
                 for j_name, member, s_model in vacm_groups:
                     if j_name.lower() == comm_name.lower() or member.lower() == sec_name.lower():
@@ -334,23 +333,12 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # Healthmonitorの読込と動的コマンド再構築
+        # 【大幅修正】Healthmonitorの読込と動的コマンド再構築
         # --------------------------------------
         st.subheader("❤️ Healthmonitorの設定読込とコマンド再構築")
         
         hm_raw_text = ""
         hm_commands = []
-        
-        metric_mapping = {
-            "CPU Utilization": "cpu-util",
-            "Current Sensors": "current-sensors",
-            "Fan Sensors": "fan-sensors",
-            "Memory Utilization": "memory-util",
-            "Power Supplies": "power-supplies",
-            "RAID raid1-1 Working Members": "raid-status-raid1-1",
-            "Temperature Sensors": "temperature-sensors",
-            "Voltage Sensors": "voltage-sensors"
-        }
         
         hm_start_index = -1
         for idx, l in enumerate(base_cleaned_lines):
@@ -360,32 +348,64 @@ with tab1:
                 break
         
         if hm_start_index != -1:
-            extracted_hm_lines = base_cleaned_lines[hm_start_index : hm_start_index + 26]
+            # テーブル終了まで多め(40行)に安全に切り出す
+            extracted_hm_lines = base_cleaned_lines[hm_start_index : hm_start_index + 40]
             hm_raw_text = "\n".join(extracted_hm_lines)
             
-            for h_line in extracted_hm_lines:
-                for m_name, cmd_id in metric_mapping.items():
-                    if m_name in h_line:
-                        if cmd_id == "cpu-util":
-                            thresholds = re.findall(r'(\d+)\s*%', h_line)
-                            if len(thresholds) >= 2:
-                                if thresholds[0] != "85":
-                                    hm_commands.append(f"health-monitoring metric cpu-util high-warning-threshold {thresholds[0]}")
-                                if thresholds[1] != "95":
-                                    hm_commands.append(f"health-monitoring metric cpu-util high-critical-threshold {thresholds[1]}")
+            # マッピング定義 (実際のログに現れる文字列と、対応するコマンド用ID)
+            metric_mapping = {
+                "CPU Utilization": "cpu-util",
+                "Memory Utilization": "memory-util",
+                "Voltage Sensors": "voltage-sensors",
+                "Current Sensors": "current-sensors",
+                "Fan Sensors": "fan-sensors",
+                "Power Supplies": "power-supplies",
+                "RAID raid1-1 Working Members": "raid-status-raid1-1",
+                "Temperature Sensors": "temperature-sensors",
+                "Appliance Certificate Validation Status": "certificate-validation"
+            }
+            
+            # 各行を順番にキーワード走査して正確に抽出するロジック
+            for line_data in extracted_hm_lines:
+                line_stripped = line_data.strip()
+                if not line_stripped or "---" in line_stripped or "Health Monitoring" in line_stripped:
+                    continue
+                
+                # 行内のメトリックを特定
+                matched_cmd_id = None
+                for keyword, cmd_id in metric_mapping.items():
+                    if keyword in line_stripped:
+                        matched_cmd_id = cmd_id
+                        break
+                
+                if matched_cmd_id:
+                    # 1. 閾値（Warning / Critical）の動的解析
+                    # % や days などの数字部分を全抽出
+                    thresholds = re.findall(r'(\d+)\s*(?:%|days)', line_stripped)
+                    
+                    if matched_cmd_id == "cpu-util" and len(thresholds) >= 2:
+                        if thresholds[0] != "85":
+                            hm_commands.append(f"health-monitoring metric cpu-util high-warning-threshold {thresholds[0]}")
+                        if thresholds[1] != "95":
+                            hm_commands.append(f"health-monitoring metric cpu-util high-critical-threshold {thresholds[1]}")
+                            
+                    elif matched_cmd_id == "memory-util" and len(thresholds) >= 2:
+                        if thresholds[0] != "80":
+                            hm_commands.append(f"health-monitoring metric memory-util high-warning-threshold {thresholds[0]}")
+                        if thresholds[1] != "90":
+                            hm_commands.append(f"health-monitoring metric memory-util high-critical-threshold {thresholds[1]}")
+                    
+                    # 2. 末尾のアラートフラグ（T, M）の動的判定
+                    # パイプ「|」で分割した一番最後の項目（Alerts）を取得
+                    parts = line_stripped.split('|')
+                    if len(parts) >= 2:
+                        alerts_section = parts[-1].strip()
                         
-                        elif cmd_id == "memory-util":
-                            thresholds = re.findall(r'(\d+)\s*%', h_line)
-                            if len(thresholds) >= 2:
-                                if thresholds[0] != "80":
-                                    hm_commands.append(f"health-monitoring metric memory-util high-warning-threshold {thresholds[0]}")
-                                if thresholds[1] != "90":
-                                    hm_commands.append(f"health-monitoring metric memory-util high-critical-threshold {thresholds[1]}")
-                        
-                        if re.search(r'\bT\b', h_line):
-                            hm_commands.append(f"health-monitoring metric {cmd_id} trap enable")
-                        if re.search(r'\bM\b', h_line):
-                            hm_commands.append(f"health-monitoring metric {cmd_id} email enable")
+                        # Tが含まれていればtrap、Mが含まれていればemailを有効化
+                        if "T" in alerts_section:
+                            hm_commands.append(f"health-monitoring metric {matched_cmd_id} trap enable")
+                        if "M" in alerts_section:
+                            hm_commands.append(f"health-monitoring metric {matched_cmd_id} email enable")
                                 
             hm_generated_text = "\n".join(hm_commands) if hm_commands else "追加コマンドは不要です。"
         else:
@@ -394,7 +414,7 @@ with tab1:
 
         col_hm1, col_hm2 = st.columns(2)
         with col_hm1:
-            show_custom_area("Healthmonitor 設定内容枠 (ヘッダーから25行を自動抽出)", hm_raw_text, 250, "hm_raw", "health_source.txt")
+            show_custom_area("Healthmonitor 設定内容枠 (ヘッダーから自動抽出)", hm_raw_text, 250, "hm_raw", "health_source.txt")
         with col_hm2:
             show_custom_area("再構築された Healthmonitor コマンド枠", hm_generated_text, 250, "hm_gen", "health_commands.txt")
 
