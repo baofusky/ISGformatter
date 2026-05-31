@@ -1,7 +1,6 @@
 import json
 import re
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ページ全体のレイアウト設定
 st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
@@ -10,36 +9,14 @@ st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
-    title_col, copy_col, dl_col = st.columns([2, 1, 1.2])
+    st.markdown(f"**{label}**")
+    
+    # ダウンロードボタン用のカラム配置
+    title_col, dl_col = st.columns([3, 1.2])
     
     with title_col:
-        st.markdown(f"**{label}**")
+        st.caption("💡 枠内の右上に表示されるボタンからクリップボードにコピーできます。")
         
-    with copy_col:
-        if st.button(f"📋 コピーする", key=f"btn_copy_{unique_key}", use_container_width=True):
-            escaped_text = json.dumps(text_value)
-            js_code = f"""
-            <script>
-                var text = {escaped_text};
-                navigator.clipboard.writeText(text).then(function() {{
-                    parent.postMessage({{type: 'copy_success', key: '{unique_key}'}}, '*');
-                }}).catch(function(err) {{
-                    var textArea = document.createElement("textarea");
-                    textArea.value = text;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    try {{
-                        document.execCommand('copy');
-                    }} catch (e) {{
-                        alert('コピーに失敗しました');
-                    }}
-                    document.body.removeChild(textArea);
-                }});
-            </script>
-            """
-            components.html(js_code, height=0, width=0)
-            st.toast("✅ クリップボードにコピーしました！", icon="📝")
-
     with dl_col:
         is_disabled = "は見つかりませんでした" in text_value or "は検出されませんでした" in text_value or not text_value.strip()
         st.download_button(
@@ -52,7 +29,8 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
             use_container_width=True
         )
 
-    st.text_area(label, text_value, height=height, key=f"area_{unique_key}", label_visibility="collapsed")
+    # st.text_areaの代わりにst.codeを使用することで、JavaScript制限を回避し確実にコピー機能を提供します。
+    st.code(text_value, language="text", line_numbers=False)
 
 
 # タブ構造
@@ -411,8 +389,6 @@ with tab1:
                     parts = line_stripped.split('|')
                     if len(parts) >= 2:
                         alerts_section = parts[-1].strip()
-                        
-                        # 💡 【修正点】 T(Trap) に加え、 M(Mail) または E(Email) を柔軟に検知するよう条件を拡張
                         if "T" in alerts_section:
                             hm_commands.append(f"health-monitoring metric {matched_cmd_id} trap enable")
                         if "M" in alerts_section or "E" in alerts_section:
