@@ -1012,27 +1012,23 @@ with tab2:
                 st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
 
 
+# 3ページ目：修正版の結合処理
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
-    st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。SMTP設定は最後に配置されます。")
     
     combined_ordered_list = []
-    # SMTPキーをリストの最後に移動しました
+    # 順序を明確に指定
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other", "smtp"]
     
     for key in order_keys:
-        # 各辞書から文字列を取得
-        cmd_content = all_generated_cmds_dict.get(key, "").strip()
-        
-        # 内容が空でなく、生成不可メッセージではない場合のみ追加
-        if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "見つかりませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
-            combined_ordered_list.append(cmd_content)
-    
-    # リストにあるすべてのコマンドを連結（ダブル改行で区切る）
+        # キーが存在するか確認し、ACLとSMTPが混ざらないように取得
+        if key in all_generated_cmds_dict:
+            cmd_content = all_generated_cmds_dict[key].strip()
+            
+            # 内容のバリデーション
+            if cmd_content and "コマンドは生成されませんでした" not in cmd_content:
+                combined_ordered_list.append(cmd_content)
+
+    # 結合して出力
     all_commands_text = "\n\n".join(combined_ordered_list)
-    
-    # 結果を表示
-    if all_commands_text:
-        show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
-    else:
-        st.warning("現在、表示するコマンドがありません。1ページ目で設定ファイルが読み込まれているか確認してください。")
+    show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
