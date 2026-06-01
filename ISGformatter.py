@@ -524,10 +524,9 @@ with tab1:
         proxy_raw_section = ""
         proxy_generated_commands = ""
         
-        # 修正：proxy-settings から username 行までを抽出するロジックに変更
+        # 取得ロジック：proxy-settings から username 行まで
         proxy_lines = []
         in_proxy = False
-        
         for line in base_cleaned_lines:
             if line.startswith("proxy-settings"):
                 in_proxy = True
@@ -539,7 +538,7 @@ with tab1:
         if proxy_lines:
             proxy_raw_section = "\n".join(proxy_lines)
             
-            # コマンド生成ロジックは変更なし
+            # コマンド生成ロジック
             proxy_cmd_list = ["proxy-settings"]
             for p_line in proxy_lines:
                 p_line_stripped = p_line.strip()
@@ -549,25 +548,25 @@ with tab1:
                     proxy_cmd_list.append(p_line_stripped)
                 elif p_line_stripped in ["enable", "disable"]:
                     proxy_cmd_list.append(p_line_stripped)
-            
             proxy_cmd_list.append("exit")
             
-            # 警告文をコマンド枠に追加
-            proxy_generated_commands = "\n".join(proxy_cmd_list) + "\n\n! ⚠️ 警告: パスワードは自動設定できませんため、手動で設定する必要がある"
+            proxy_generated_commands = "\n".join(proxy_cmd_list)
             all_generated_cmds_dict["proxy"] = proxy_generated_commands
+            
+            # 左右分割表示
+            col_proxy1, col_proxy2 = st.columns(2)
+            with col_proxy1:
+                show_custom_area("プロキシ設定の内容 (proxy-settings〜username)", proxy_raw_section, 250, "proxy_raw", "proxy_source.txt")
+            with col_proxy2:
+                show_custom_area("作成されたプロキシコマンド", proxy_generated_commands, 250, "proxy_gen", "proxy_commands.txt")
+                
+            # 警告を枠外に表示
+            st.warning("⚠️ 警告: パスワードは自動設定できませんため、手動で設定する必要がある")
+            
         else:
-            proxy_raw_section = "プロキシ設定（proxy-settings から username 行まで）が見つかりませんでした。"
-            proxy_generated_commands = "プロキシ設定がないため、コマンドは生成されませんでした。"
-
-        # 左右分割表示
-        col_proxy1, col_proxy2 = st.columns(2)
-        with col_proxy1:
-            show_custom_area("プロキシ設定の内容 (proxy-settings〜username)", proxy_raw_section, 250, "proxy_raw", "proxy_source.txt")
-        with col_proxy2:
-            show_custom_area("作成されたプロキシコマンド", proxy_generated_commands, 250, "proxy_gen", "proxy_commands.txt")
+            st.error("プロキシ設定（proxy-settings から username 行まで）が見つかりませんでした。")
 
         st.markdown("---")
-
         # --------------------------------------
         # 📧 SMTP設定の読込とコマンド自動作成（★不具合完全修正：destination行の欠落を完全に解決）
         # --------------------------------------
@@ -921,6 +920,10 @@ with tab1:
                 if line.lower().startswith("smtp"):
                     continue
                 if line.lower().startswith("gateway"):
+                    continue
+		        if line.lower().startswith("acl\nenable"):
+                    continue
+		        if line.lower().startswith("rule"):
                     continue
                 if line.lower().startswith("from-address"):
                     continue
