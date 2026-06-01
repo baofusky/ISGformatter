@@ -29,7 +29,7 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
             use_container_width=True
         )
 
-    # st.text_areaの代わりにst.codeを使用することで、JavaScript制限を回避し確実にコピー機能を提供します。
+    # st.text_areaの代わりにst.codeを使用することで、確実にコピー機能を提供します。
     st.code(text_value, language="text", line_numbers=False)
 
 
@@ -269,7 +269,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🛠️ LAGの設定読込とコマンド変換 (lag と exit の追加対応)
+        # 🛠️ LAGの設定読込とコマンド変換
         # --------------------------------------
         st.subheader("🔗 LAGの設定読込とコマンド変換")
         
@@ -298,7 +298,7 @@ with tab1:
                         if interface and interface != "-":
                             lag_commands.append(f"group id {g_id} add {interface}")
             
-            # ルールが存在する場合（lag行以外にもコマンドが作られた場合）、最後に exit コマンドを追加
+            # ルールが存在する場合、最後に exit コマンドを追加
             if len(lag_commands) > 1:
                 lag_commands.append("exit")
                             
@@ -333,7 +333,6 @@ with tab1:
         if hm_start_index != -1:
             full_hm_lines = base_cleaned_lines[hm_start_index : hm_start_index + 40]
             
-            # 「CPU Utilization」から「Voltage Sensors」までの行を動的に特定
             start_target_idx = -1
             end_target_idx = -1
             
@@ -352,7 +351,6 @@ with tab1:
             
             hm_raw_text = "\n".join(extracted_hm_lines)
             
-            # マッピング定義
             metric_mapping = {
                 "CPU Utilization": "cpu-util",
                 "Memory Utilization": "memory-util",
@@ -377,7 +375,6 @@ with tab1:
                         break
                 
                 if matched_cmd_id:
-                    # 1. 閾値判定
                     thresholds = re.findall(r'(\d+)\s*(?:%|days)', line_stripped)
                     
                     if matched_cmd_id == "cpu-util" and len(thresholds) >= 2:
@@ -392,7 +389,6 @@ with tab1:
                         if thresholds[1] != "90":
                             hm_commands.append(f"health-monitoring metric memory-util high-critical-threshold {thresholds[1]}")
                     
-                    # 2. アラートフラグ（T / M / E）判定
                     parts = line_stripped.split('|')
                     if len(parts) >= 2:
                         alerts_section = parts[-1].strip()
@@ -467,14 +463,13 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🛡️ ACL設定内容表示とコマンド自動作成 (新規ロジックへの修正)
+        # 🛡️ ACL設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
         
         acl_raw_section = ""
         acl_generated_commands = ""
         
-        # 💡 「!\nacl」から始まり「proxy-settings」の直前の「!」までを動的に抽出
         acl_section_match = re.search(r'(!\s*\n\s*acl\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*proxy-settings)', string_data, re.IGNORECASE)
         
         if acl_section_match:
@@ -482,27 +477,22 @@ with tab1:
             if not acl_raw_section.endswith("!"):
                 acl_raw_section += "\n!"
                 
-            # --- コマンド自動生成ロジック ---
             acl_sec_lines = acl_raw_section.splitlines()
             acl_rule_lines = []
-            acl_status = "enable" # デフォルト値
+            acl_status = "enable"
             
             for a_line in acl_sec_lines:
                 a_line_stripped = a_line.strip()
-                # ruleで始まる行を抽出
                 if a_line_stripped.lower().startswith("rule"):
                     acl_rule_lines.append(a_line_stripped)
-                # 有効・無効ステータスの判定
                 if a_line_stripped in ["enable", "disable"]:
                     acl_status = a_line_stripped
             
-            # 🛠️ 新しい条件に基づくコマンド配列の組み立て
             acl_cmd_list = []
             acl_cmd_list.append("acl")          # 1行目: acl
             acl_cmd_list.append(acl_status)     # 2行目: enable もしくは disable
             acl_cmd_list.append("yes")          # 3行目: yes (固定)
             
-            # 4行目以降: rule内容があれば行ごとに配置
             if acl_rule_lines:
                 acl_cmd_list.extend(acl_rule_lines)
                 
@@ -518,6 +508,65 @@ with tab1:
             show_custom_area("ACL設定の内容の表示", acl_raw_section, 250, "acl_raw_detail", "acl_source_detail.txt")
         with col_new_acl2:
             show_custom_area("作成されたACLコマンド", acl_generated_commands, 250, "acl_gen_detail", "acl_commands_detail.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🌐 NEW: プロキシ設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🌐 プロキシ設定の精査と個別コマンド生成")
+        
+        proxy_raw_section = ""
+        proxy_generated_commands = ""
+        
+        # 💡 「!\nproxy-settings」から始まり「timezone」の直前の「!」までを動的に抽出
+        proxy_section_match = re.search(r'(!\s*\n\s*proxy-settings\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*timezone)', string_data, re.IGNORECASE)
+        
+        if proxy_section_match:
+            proxy_raw_section = proxy_section_match.group(1).strip()
+            if not proxy_raw_section.endswith("!"):
+                proxy_raw_section += "\n!"
+                
+            # --- コマンド自動生成ロジック ---
+            proxy_sec_lines = proxy_raw_section.splitlines()
+            proxy_status = "enable"  # デフォルト
+            
+            proxy_cmd_list = ["proxy-settings"] # 1行目
+            
+            for p_line in proxy_sec_lines:
+                p_line_stripped = p_line.strip()
+                
+                # host または port の抽出
+                if p_line_stripped.lower().startswith("host ") or p_line_stripped.lower().startswith("port "):
+                    proxy_cmd_list.append(p_line_stripped)
+                    
+                # username の抽出判定 (後ろに値がある、かつ "" ではない場合のみ)
+                if p_line_stripped.lower().startswith("username"):
+                    user_val = p_line_stripped[8:].strip() # "username "の文字数以降を取得
+                    # クォーテーション等の除去チェック、および空判定
+                    clean_user_val = user_val.replace('"', '').replace("'", "").strip()
+                    if clean_user_val and user_val != '""':
+                        proxy_cmd_list.append(p_line_stripped)
+                        
+                # 有効・無効ステータスの判定
+                if p_line_stripped in ["enable", "disable"]:
+                    proxy_status = p_line_stripped
+            
+            # 設定項目群のうしろに enable/disable を配置
+            proxy_cmd_list.append(proxy_status)
+            # 最終行に exit
+            proxy_cmd_list.append("exit")
+            
+            proxy_generated_commands = "\n".join(proxy_cmd_list)
+        else:
+            proxy_raw_section = "ファイル内に指定条件を満たす「プロキシ設定セクション（!\\nproxy-settings ～ timezone の直上）」が見つかりませんでした。"
+            proxy_generated_commands = "プロキシ設定がないため、コマンドは生成されませんでした。"
+            
+        col_proxy1, col_proxy2 = st.columns(2)
+        with col_proxy1:
+            show_custom_area("プロキシ設定の内容の表示", proxy_raw_section, 250, "proxy_raw", "proxy_source.txt")
+        with col_proxy2:
+            show_custom_area("作成されたプロキシコマンド", proxy_generated_commands, 250, "proxy_gen", "proxy_commands.txt")
 
 
 # ==========================================
