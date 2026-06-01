@@ -664,7 +664,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🔌 NEW: NIC設定内容表示とコマンド自動作成
+        # 🔌 NIC設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("🔌 NIC設定の精査と個別コマンド生成")
         
@@ -674,13 +674,11 @@ with tab1:
         start_nic_idx = -1
         end_nic_idx = -1
         
-        # 「interface 0:0」から「authenticationの上の!」までの範囲をスキャン
         for idx, l in enumerate(base_cleaned_lines):
             l_stripped = l.strip()
             if start_nic_idx == -1 and l_stripped.lower().startswith("interface 0:0"):
                 start_nic_idx = idx
             if start_nic_idx != -1 and l_stripped.lower().startswith("authentication"):
-                # authenticationの行から上に遡って、最も近い「!」の行を探す
                 for back_idx in range(idx - 1, start_nic_idx, -1):
                     if base_cleaned_lines[back_idx].strip() == "!":
                         end_nic_idx = back_idx
@@ -692,7 +690,6 @@ with tab1:
             nic_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_nic_idx, end_nic_idx + 1)]
             nic_raw_section = "\n".join(nic_extracted_lines)
             
-            # 各インターフェースブロックに分割してコマンドをパース
             interfaces_blocks = []
             current_block = []
             
@@ -716,9 +713,8 @@ with tab1:
                 if not block:
                     continue
                 
-                # ブロック内の要素を初期化
                 if_line = block[0]
-                status_line = "disable" # デフォルト
+                status_line = "disable"
                 dhcp_line = None
                 speed_val = "auto"
                 duplex_val = "auto"
@@ -745,25 +741,29 @@ with tab1:
                     elif b_lower.startswith("ip-address"):
                         ip_line = b_stripped
                 
-                # 指定のルールに従ってコマンドを組み立て
+                # 全ての個別コマンド行に対して、連続する半角スペースを1つに整形する関数
+                def clean_space(txt):
+                    return re.sub(r'\s+', ' ', txt).strip()
+                
                 cmd_block = []
-                cmd_block.append(if_line)       # 1. interface行そのまま
-                cmd_block.append(status_line)   # 2. enable / disable そのまま
+                cmd_block.append(clean_space(if_line))
+                cmd_block.append(clean_space(status_line))
                 
                 if dhcp_line:
-                    cmd_block.append(dhcp_line) # 3. dhcp行そのまま (存在すれば)
+                    cmd_block.append(clean_space(dhcp_line))
                     
-                # 4. speed と duplex を1行に結合
-                cmd_block.append(f"speed {speed_val} duplex {duplex_val}")
+                # speed と duplex を結合した後、間隔を確実に1スペースに制限
+                raw_speed_duplex = f"speed {speed_val} duplex {duplex_val}"
+                cmd_block.append(clean_space(raw_speed_duplex))
                 
                 if mtu_line:
-                    cmd_block.append(mtu_line)  # 5. mtu-size行そのまま
+                    cmd_block.append(clean_space(mtu_line))
                 if vlan_line:
-                    cmd_block.append(vlan_line) # 6. vlan-trunking行そのまま (存在すれば)
+                    cmd_block.append(clean_space(vlan_line))
                 if ip_line:
-                    cmd_block.append(ip_line)   # 7. ip-address行そのまま (存在すれば)
+                    cmd_block.append(clean_space(ip_line))
                     
-                cmd_block.append("exit")        # 8. 最後の行に exit
+                cmd_block.append("exit")
                 
                 all_nic_cmds.append("\n".join(cmd_block))
                 
