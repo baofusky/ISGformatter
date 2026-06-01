@@ -1025,27 +1025,28 @@ with tab2:
 # ==========================================
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
-    st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。SMTPはNIC情報の後に配置されます。")
+    st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。NIC設定は最後に配置されます。")
     
     combined_ordered_list = []
-    # SMTPをNICの後ろに移動（"nic", "smtp"）
-    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "smtp", "acl", "other"]
+    # NICを最後（otherの後）に移動
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "acl", "other", "nic"]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
-        # 内容が空でなく、無効な文字列を含まない場合のみリストへ追加
+        # 不要なメッセージを除外して追加
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "見つかりませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
     
-    # 修正箇所：リストの先頭に "conf" が含まれていない場合のみ追加
+    # 結合処理
     all_commands_text = "\n\n".join(combined_ordered_list)
     
-    if all_commands_text and not all_commands_text.startswith("conf"):
+    # SNMPが含まれていない場合にのみ先頭に "conf" を追加
+    if all_commands_text and not all_commands_text.strip().startswith("conf"):
         all_commands_text = "conf\n\n" + all_commands_text
     
     # 結果を表示
     if all_commands_text:
         show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
     else:
-        st.warning("現在、表示するコマンドがありません。")
+        st.warning("表示するコマンドがありません。")
