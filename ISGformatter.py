@@ -779,7 +779,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # ⚙️ NEW: その他設定内容表示とコマンド自動作成
+        # ⚙️ その他設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("⚙️ その他設定の精査と個別コマンド生成")
         
@@ -806,7 +806,7 @@ with tab1:
             skip_next_line = False
             
             for idx, line in enumerate(other_extracted_lines):
-                # 直前の判定で「次の行をスキップ」フラグが立っていた場合、処理をジャンプしてフラグを寝かせる
+                # 直前の判定で「次の行をスキップ」フラグが立っていた場合
                 if skip_next_line:
                     skip_next_line = False
                     continue
@@ -819,13 +819,12 @@ with tab1:
                 if line in ["service Management", "service SNMP", "service WebRouter"]:
                     continue
                 
-                # 3. nacm groupsで始まる行をスキップ
-                if line.startswith("nacm groups") and not line.startswith("nacm groups group admin") and not "nacm groups group reservedreadonly" in line.lower():
+                # 3. nacm groups で始まるすべての行を除外 (前方一致判定)
+                if line.startswith("nacm groups"):
+                    # ただし、除外対象が「nacm groups group admin」だった場合は、次行スキップフラグをセット
+                    if line == "nacm groups group admin":
+                        skip_next_line = True
                     continue
-                
-                # 4. nacm groups group adminの行自体は表示するが、「次の行」をスキップするフラグを立てる
-                if line == "nacm groups group admin":
-                    skip_next_line = True
                 
                 # スペースを一個に調整して追加
                 cleaned_line = re.sub(r'\s+', ' ', line).strip()
