@@ -1020,23 +1020,31 @@ with tab2:
                 st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
 
 
-# 3ページ目：修正版の結合処理
+# ==========================================
+# 3ページ目：作成コマンドの一括出力
+# ==========================================
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
+    st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。")
     
     combined_ordered_list = []
-    # 順序を明確に指定
-    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other", "smtp"]
+    
+    # 修正箇所: "smtp" を "nic" の直後に配置
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "smtp", "acl", "other"]
     
     for key in order_keys:
-        # キーが存在するか確認し、ACLとSMTPが混ざらないように取得
-        if key in all_generated_cmds_dict:
-            cmd_content = all_generated_cmds_dict[key].strip()
-            
-            # 内容のバリデーション
-            if cmd_content and "コマンドは生成されませんでした" not in cmd_content:
-                combined_ordered_list.append(cmd_content)
-
-    # 結合して出力
+        # SMTPの混入を避けるため、他のセクションの生成ロジックがクリーンであることを確認してください
+        cmd_content = all_generated_cmds_dict.get(key, "").strip()
+        
+        # 不要なメッセージを除外してリストに追加
+        if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "見つかりませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
+            combined_ordered_list.append(cmd_content)
+    
+    # 全コマンドを空行で区切って結合
     all_commands_text = "\n\n".join(combined_ordered_list)
-    show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
+    
+    # 結果を表示
+    if all_commands_text:
+        show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
+    else:
+        st.warning("現在、表示するコマンドがありません。")
