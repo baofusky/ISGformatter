@@ -1039,6 +1039,6 @@ with tab3:
     
     # 結果を表示
     if all_commands_text:
-        show_custom_area("SMTPを除く作成済みコマンド一括表示", all_commands_text+smtp_generated_commands, 600, "all_cmds", "all_commands.txt")
+        show_custom_area("SMTPを除く作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
     else:
         st.info("表示可能なコマンドがありません。")
