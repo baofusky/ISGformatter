@@ -629,7 +629,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🖥️ NEW: マシン情報更新設定内容表示とコマンド自動作成
+        # 🖥️ マシン情報更新設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("🖥️ マシン情報更新設定の精査と個別コマンド生成")
         
@@ -639,22 +639,17 @@ with tab1:
         start_m_idx = -1
         end_m_idx = -1
         
-        # 「appliance-name」から「ip default-gateway」が始まる行の範囲を検索
         for idx, l in enumerate(base_cleaned_lines):
             l_stripped = l.strip()
             if start_m_idx == -1 and l_stripped.lower().startswith("appliance-name"):
                 start_m_idx = idx
             if start_m_idx != -1 and l_stripped.lower().startswith("ip default-gateway"):
                 end_m_idx = idx
-                break  # 終了行が見つかったらループを抜ける
+                break
 
         if start_m_idx != -1 and end_m_idx != -1:
-            # 範囲内の行を抽出
             extracted_machine_lines = [base_cleaned_lines[k].strip() for k in range(start_m_idx, end_m_idx + 1)]
-            
-            # 左枠: 抽出された内容を行ごとにそのまま配置して表示
             machine_info_raw_section = "\n".join(extracted_machine_lines)
-            # 右枠: 表示される内容をそのまま行ごとにコマンドとして配置
             machine_info_generated_commands = "\n".join(extracted_machine_lines)
         else:
             machine_info_raw_section = "ファイル内に条件を満たす「マシン情報設定範囲（appliance-name ～ ip default-gateway）」が見つかりませんでした。"
@@ -665,6 +660,123 @@ with tab1:
             show_custom_area("マシン情報更新設定の内容の表示", machine_info_raw_section, 220, "mach_raw", "machine_info_source.txt")
         with col_mach2:
             show_custom_area("作成されたマシン情報更新コマンド", machine_info_generated_commands, 220, "mach_gen", "machine_info_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🔌 NEW: NIC設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🔌 NIC設定の精査と個別コマンド生成")
+        
+        nic_raw_section = ""
+        nic_generated_commands = ""
+        
+        start_nic_idx = -1
+        end_nic_idx = -1
+        
+        # 「interface 0:0」から「authenticationの上の!」までの範囲をスキャン
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if start_nic_idx == -1 and l_stripped.lower().startswith("interface 0:0"):
+                start_nic_idx = idx
+            if start_nic_idx != -1 and l_stripped.lower().startswith("authentication"):
+                # authenticationの行から上に遡って、最も近い「!」の行を探す
+                for back_idx in range(idx - 1, start_nic_idx, -1):
+                    if base_cleaned_lines[back_idx].strip() == "!":
+                        end_nic_idx = back_idx
+                        break
+                if end_nic_idx != -1:
+                    break
+
+        if start_nic_idx != -1 and end_nic_idx != -1:
+            nic_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_nic_idx, end_nic_idx + 1)]
+            nic_raw_section = "\n".join(nic_extracted_lines)
+            
+            # 各インターフェースブロックに分割してコマンドをパース
+            interfaces_blocks = []
+            current_block = []
+            
+            for line in nic_extracted_lines:
+                if line.lower().startswith("interface "):
+                    if current_block:
+                        interfaces_blocks.append(current_block)
+                    current_block = [line]
+                elif current_block:
+                    if line == "!":
+                        interfaces_blocks.append(current_block)
+                        current_block = []
+                    else:
+                        current_block.append(line)
+            if current_block:
+                interfaces_blocks.append(current_block)
+                
+            all_nic_cmds = []
+            
+            for block in interfaces_blocks:
+                if not block:
+                    continue
+                
+                # ブロック内の要素を初期化
+                if_line = block[0]
+                status_line = "disable" # デフォルト
+                dhcp_line = None
+                speed_val = "auto"
+                duplex_val = "auto"
+                mtu_line = None
+                vlan_line = None
+                ip_line = None
+                
+                for b_line in block[1:]:
+                    b_stripped = b_line.strip()
+                    b_lower = b_stripped.lower()
+                    
+                    if b_lower in ["enable", "disable"]:
+                        status_line = b_stripped
+                    elif b_lower.startswith("dhcp"):
+                        dhcp_line = b_stripped
+                    elif b_lower.startswith("speed "):
+                        speed_val = b_stripped.replace("speed", "").strip()
+                    elif b_lower.startswith("duplex "):
+                        duplex_val = b_stripped.replace("duplex", "").strip()
+                    elif b_lower.startswith("mtu-size"):
+                        mtu_line = b_stripped
+                    elif b_lower.startswith("vlan-trunking"):
+                        vlan_line = b_stripped
+                    elif b_lower.startswith("ip-address"):
+                        ip_line = b_stripped
+                
+                # 指定のルールに従ってコマンドを組み立て
+                cmd_block = []
+                cmd_block.append(if_line)       # 1. interface行そのまま
+                cmd_block.append(status_line)   # 2. enable / disable そのまま
+                
+                if dhcp_line:
+                    cmd_block.append(dhcp_line) # 3. dhcp行そのまま (存在すれば)
+                    
+                # 4. speed と duplex を1行に結合
+                cmd_block.append(f"speed {speed_val} duplex {duplex_val}")
+                
+                if mtu_line:
+                    cmd_block.append(mtu_line)  # 5. mtu-size行そのまま
+                if vlan_line:
+                    cmd_block.append(vlan_line) # 6. vlan-trunking行そのまま (存在すれば)
+                if ip_line:
+                    cmd_block.append(ip_line)   # 7. ip-address行そのまま (存在すれば)
+                    
+                cmd_block.append("exit")        # 8. 最後の行に exit
+                
+                all_nic_cmds.append("\n".join(cmd_block))
+                
+            nic_generated_commands = "\n\n".join(all_nic_cmds)
+        else:
+            nic_raw_section = "ファイル内に条件を満たす「NIC設定範囲（interface 0:0 ～ authentication直上の !）」が見つかりませんでした。"
+            nic_generated_commands = "NIC設定がないため、コマンドは生成されませんでした。"
+            
+        col_nic1, col_nic2 = st.columns(2)
+        with col_nic1:
+            show_custom_area("NIC設定の内容の表示", nic_raw_section, 300, "nic_raw", "nic_info_source.txt")
+        with col_nic2:
+            show_custom_area("作成されたNICコマンド", nic_generated_commands, 300, "nic_gen", "nic_commands.txt")
 
 
 # ==========================================
