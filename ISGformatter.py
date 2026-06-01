@@ -590,7 +590,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🔑 NEW: ライセンス更新設定内容表示とコマンド自動作成
+        # 🔑 ライセンス更新設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("🔑 ライセンス更新設定の精査と個別コマンド生成")
         
@@ -598,24 +598,18 @@ with tab1:
         licensing_generated_commands = ""
         
         lic_found_lines = []
-        # 行単位でスキャンして「licensing」で始まる行とその次の「auto-update」行を安全に捕捉
         for idx, l in enumerate(base_cleaned_lines):
             l_stripped = l.strip()
             if l_stripped.lower().startswith("licensing"):
                 lic_found_lines.append(l_stripped)
-                # 次の行が auto-update で始まっているか確認
                 if idx + 1 < len(base_cleaned_lines):
                     next_l_stripped = base_cleaned_lines[idx + 1].strip()
                     if next_l_stripped.lower().startswith("auto-update"):
                         lic_found_lines.append(next_l_stripped)
-                break  # 最初に見つかったブロックで確定
+                break
 
         if lic_found_lines:
-            # 左枠: 各行ごとに行に分けてそのまま表示
             licensing_raw_section = "\n".join(lic_found_lines)
-            
-            # 右枠: auto-update の状態を解析して正確な個別コマンドを生成
-            # デフォルトはfalse判定とし、文字列内に「true」が含まれているかを厳密にチェック
             has_true = any("true" in line.lower() for line in lic_found_lines if line.lower().startswith("auto-update"))
             
             if has_true:
@@ -631,6 +625,46 @@ with tab1:
             show_custom_area("ライセンス更新設定の内容の表示", licensing_raw_section, 180, "lic_raw", "licensing_source.txt")
         with col_lic2:
             show_custom_area("作成されたライセンス更新コマンド", licensing_generated_commands, 180, "lic_gen", "licensing_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🖥️ NEW: マシン情報更新設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🖥️ マシン情報更新設定の精査と個別コマンド生成")
+        
+        machine_info_raw_section = ""
+        machine_info_generated_commands = ""
+        
+        start_m_idx = -1
+        end_m_idx = -1
+        
+        # 「appliance-name」から「ip default-gateway」が始まる行の範囲を検索
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if start_m_idx == -1 and l_stripped.lower().startswith("appliance-name"):
+                start_m_idx = idx
+            if start_m_idx != -1 and l_stripped.lower().startswith("ip default-gateway"):
+                end_m_idx = idx
+                break  # 終了行が見つかったらループを抜ける
+
+        if start_m_idx != -1 and end_m_idx != -1:
+            # 範囲内の行を抽出
+            extracted_machine_lines = [base_cleaned_lines[k].strip() for k in range(start_m_idx, end_m_idx + 1)]
+            
+            # 左枠: 抽出された内容を行ごとにそのまま配置して表示
+            machine_info_raw_section = "\n".join(extracted_machine_lines)
+            # 右枠: 表示される内容をそのまま行ごとにコマンドとして配置
+            machine_info_generated_commands = "\n".join(extracted_machine_lines)
+        else:
+            machine_info_raw_section = "ファイル内に条件を満たす「マシン情報設定範囲（appliance-name ～ ip default-gateway）」が見つかりませんでした。"
+            machine_info_generated_commands = "マシン情報設定がないため、コマンドは生成されませんでした。"
+            
+        col_mach1, col_mach2 = st.columns(2)
+        with col_mach1:
+            show_custom_area("マシン情報更新設定の内容の表示", machine_info_raw_section, 220, "mach_raw", "machine_info_source.txt")
+        with col_mach2:
+            show_custom_area("作成されたマシン情報更新コマンド", machine_info_generated_commands, 220, "mach_gen", "machine_info_commands.txt")
 
 
 # ==========================================
