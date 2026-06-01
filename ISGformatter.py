@@ -485,41 +485,27 @@ with tab1:
         # --------------------------------------
         st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
         
-        acl_raw_section = ""
-        acl_generated_commands = ""
-        
-        acl_section_match = re.search(r'(!\s*\n\s*acl\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*proxy-settings)', string_data, re.IGNORECASE)
-        
-        if acl_section_match:
-            acl_raw_section = acl_section_match.group(1).strip()
-            if not acl_raw_section.endswith("!"):
-                acl_raw_section += "\n!"
-                
-            acl_sec_lines = acl_raw_section.splitlines()
-            acl_rule_lines = []
-            acl_status = "enable"
-            
-            for a_line in acl_sec_lines:
-                a_line_stripped = a_line.strip()
-                if a_line_stripped.lower().startswith("rule"):
-                    acl_rule_lines.append(a_line_stripped)
-                if a_line_stripped in ["enable", "disable"]:
-                    acl_status = a_line_stripped
-            
-            acl_cmd_list = []
-            acl_cmd_list.append("acl")
-            acl_cmd_list.append(acl_status)
-            acl_cmd_list.append("yes")
-            
-            if acl_rule_lines:
-                acl_cmd_list.extend(acl_rule_lines)
-                
-            acl_cmd_list.append("exit")
-            
-            acl_generated_commands = "\n".join(acl_cmd_list)
-            all_generated_cmds_dict["acl"] = acl_generated_commands
+        # 1ページ目で作成した acl_start_idx と acl_end_idx を利用して取得
+        if acl_start_idx != -1 and acl_end_idx != -1:
+            acl_raw_section = "\n".join(base_cleaned_lines[acl_start_idx : acl_end_idx + 1])
+            acl_sec_lines = acl_lines # 既に抽出済みの変数を利用
         else:
-            acl_raw_section = "ファイル内に指定条件を満たす「ACL設定セクション（!\\nacl ～ proxy-settings の直上）」が見つかりませんでした。"
+            acl_raw_section = "ACLルールは検出されませんでした。"
+            acl_sec_lines = []
+
+        acl_status = "enable"
+        acl_rule_lines = []
+        for a_line in acl_sec_lines:
+            a_line_stripped = a_line.strip()
+            if a_line_stripped.lower().startswith("rule"):
+                acl_rule_lines.append(a_line_stripped)
+            if a_line_stripped in ["enable", "disable"]:
+                acl_status = a_line_stripped
+        
+        if acl_sec_lines:
+            acl_cmd_list = ["acl", acl_status, "yes"] + acl_rule_lines + ["exit"]
+            acl_generated_commands = "\n".join(acl_cmd_list)
+        else:
             acl_generated_commands = "ACL設定がないため、コマンドは生成されませんでした。"
             
         col_new_acl1, col_new_acl2 = st.columns(2)
@@ -531,48 +517,54 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🌐 プロキシ設定内容表示とコマンド自動作成
+        # 🌐 プロキシ設定の精査と個別コマンド生成
         # --------------------------------------
         st.subheader("🌐 プロキシ設定の精査と個別コマンド生成")
         
         proxy_raw_section = ""
         proxy_generated_commands = ""
         
-        proxy_section_match = re.search(r'(!\s*\n\s*proxy-settings\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*timezone)', string_data, re.IGNORECASE)
+        # 修正：proxy-settings から username 行までを抽出するロジックに変更
+        proxy_lines = []
+        in_proxy = False
         
-        if proxy_section_match:
-            proxy_raw_section = proxy_section_match.group(1).strip()
-            if not proxy_raw_section.endswith("!"):
-                proxy_raw_section += "\n!"
-                
-            proxy_sec_lines = proxy_raw_section.splitlines()
-            proxy_status = "enable"
+        for line in base_cleaned_lines:
+            if line.startswith("proxy-settings"):
+                in_proxy = True
+            if in_proxy:
+                proxy_lines.append(line)
+                if line.startswith("username"):
+                    break
+        
+        if proxy_lines:
+            proxy_raw_section = "\n".join(proxy_lines)
             
+            # コマンド生成ロジックは変更なし
             proxy_cmd_list = ["proxy-settings"]
-            
-            for p_line in proxy_sec_lines:
+            for p_line in proxy_lines:
                 p_line_stripped = p_line.strip()
-                
                 if p_line_stripped.lower().startswith("host ") or p_line_stripped.lower().startswith("port "):
                     proxy_cmd_list.append(p_line_stripped)
-                    
-                if p_line_stripped.lower().startswith("username"):
-                    user_val = p_line_stripped[8:].strip()
-                    clean_user_val = user_val.replace('"', '').replace("'", "").strip()
-                    if clean_user_val and user_val != '""':
-                        proxy_cmd_list.append(p_line_stripped)
-                        
-                if p_line_stripped in ["enable", "disable"]:
-                    proxy_status = p_line_stripped
+                elif p_line_stripped.lower().startswith("username"):
+                    proxy_cmd_list.append(p_line_stripped)
+                elif p_line_stripped in ["enable", "disable"]:
+                    proxy_cmd_list.append(p_line_stripped)
             
-            proxy_cmd_list.append(proxy_status)
             proxy_cmd_list.append("exit")
             
-            proxy_generated_commands = "\n".join(proxy_cmd_list)
+            # 警告文をコマンド枠に追加
+            proxy_generated_commands = "\n".join(proxy_cmd_list) + "\n\n! ⚠️ 警告: パスワードは自動設定できませんため、手動で設定する必要がある"
             all_generated_cmds_dict["proxy"] = proxy_generated_commands
         else:
-            proxy_raw_section = "ファイル内に指定条件を満たす「プロキシ設定セクション（!\\nproxy-settings ～ timezone の直上）」が見つかりませんでした。"
+            proxy_raw_section = "プロキシ設定（proxy-settings から username 行まで）が見つかりませんでした。"
             proxy_generated_commands = "プロキシ設定がないため、コマンドは生成されませんでした。"
+
+        # 左右分割表示
+        col_proxy1, col_proxy2 = st.columns(2)
+        with col_proxy1:
+            show_custom_area("プロキシ設定の内容 (proxy-settings〜username)", proxy_raw_section, 250, "proxy_raw", "proxy_source.txt")
+        with col_proxy2:
+            show_custom_area("作成されたプロキシコマンド", proxy_generated_commands, 250, "proxy_gen", "proxy_commands.txt")
 
         st.markdown("---")
 
