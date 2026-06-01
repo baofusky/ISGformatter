@@ -269,7 +269,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # LAGの設定読込とコマンド変換
+        # 🛠️ LAGの設定読込とコマンド変換 (lag と exit の追加対応)
         # --------------------------------------
         st.subheader("🔗 LAGの設定読込とコマンド変換")
         
@@ -286,6 +286,9 @@ with tab1:
             extracted_lag_lines = base_cleaned_lines[lag_start_index + 1 : lag_start_index + 12]
             lag_raw_text = "\n".join(extracted_lag_lines)
             
+            # 💡 コマンド群の1行目に「lag」を追加
+            lag_commands.append("lag")
+            
             for l_line in extracted_lag_lines:
                 match = re.match(r'^(\d+)\s+([\d:, ]+)', l_line.strip())
                 if match:
@@ -294,8 +297,12 @@ with tab1:
                     for interface in interfaces:
                         if interface and interface != "-":
                             lag_commands.append(f"group id {g_id} add {interface}")
+            
+            # 💡 ルールが存在する場合（lag行以外にもコマンドが作られた場合）、最後に exit コマンドを追加
+            if len(lag_commands) > 1:
+                lag_commands.append("exit")
                             
-            lag_generated_text = "\n".join(lag_commands) if lag_commands else "有効なLAG設定行が検出されませんでした。"
+            lag_generated_text = "\n".join(lag_commands)
         else:
             lag_raw_text = "ファイル内に「# lag view」に該当するセクションが見つかりませんでした。"
             lag_generated_text = "LAGコマンドは生成されませんでした。"
@@ -460,7 +467,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🛡️ 【位置変更】ACL設定内容表示とコマンド自動作成（NTPの下に配置）
+        # 🛡️ ACL設定内容表示とコマンド自動作成（NTPの下に配置）
         # --------------------------------------
         st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
         
