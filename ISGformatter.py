@@ -649,6 +649,7 @@ with tab1:
             if has_destination_line and dest_addresses:
                 for addr in dest_addresses:
                     smtp_cmd_list.append(f"destination-addresses destination {addr}")
+                    smtp_cmd_list.append("exit")
                 
             if smtp_cmd_list:
                 # 修正ポイント：destination行の数に応じてexitの数を調整
@@ -661,8 +662,8 @@ with tab1:
                 # 2. destination-addresses が作成された行数分、さらにexitを追加する
                 for _ in dest_addresses:
                     smtp_cmd_list.append("exit")
-                    
-                smtp_cmd_list.append("exit")
+                
+                
                 smtp_generated_commands = "\n".join(smtp_cmd_list)
                 all_generated_cmds_dict["smtp"] = smtp_generated_commands
             else:
