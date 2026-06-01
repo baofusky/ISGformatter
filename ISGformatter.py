@@ -40,9 +40,9 @@ tab1, tab2, tab3 = st.tabs([
     "3ページ目：作成コマンドの一括出力"
 ])
 
-# 一括出力用コマンドの格納辞書を初期化
+# 一括出力用コマンドの格納辞書を初期化 (smtpを追加)
 all_generated_cmds_dict = {
-    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "",
+    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
     "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
 }
 
@@ -583,6 +583,92 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
+        # 📧 【新規追加】SMTP設定の読込とコマンド自動作成
+        # --------------------------------------
+        st.subheader("📧 SMTP設定の精査と個別コマンド生成")
+        
+        smtp_raw_section = ""
+        smtp_generated_commands = ""
+        
+        # ! \n smtp から最後の destination までの範囲を抽出
+        smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?destination.*?)(?=\n\s*!\s*\n|\n\s*\w|$)', string_data, re.IGNORECASE)
+        
+        # より頑健なフォールバック抽出
+        if not smtp_section_match:
+            smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?)(?=\n\s*!\s*\n\s*timezone|\n\s*timezone)', string_data, re.IGNORECASE)
+
+        if smtp_section_match:
+            raw_smtp_block = smtp_section_match.group(1).strip()
+            
+            # 正確に 最後のdestinationの行まで を切り出す
+            smtp_block_lines = raw_smtp_block.splitlines()
+            last_dest_idx = -1
+            for idx, line_str in enumerate(smtp_block_lines):
+                if "destination" in line_str.lower():
+                    last_dest_idx = idx
+            
+            if last_dest_idx != -1:
+                smtp_block_lines = smtp_block_lines[:last_dest_idx + 1]
+            
+            smtp_raw_section = "\n".join(smtp_block_lines)
+            
+            # コマンド生成ロジック
+            smtp_cmd_list = []
+            
+            for line in smtp_block_lines:
+                line_stripped = line.strip()
+                line_lower = line_stripped.lower()
+                
+                if not line_stripped or line_stripped == "!":
+                    continue
+                
+                # 1. smtpの行
+                if line_lower.startswith("smtp"):
+                    cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
+                    smtp_cmd_list.append(cleaned)
+                    
+                # 2. gatewayの行
+                elif line_lower.startswith("gateway"):
+                    cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
+                    smtp_cmd_list.append(cleaned)
+                    
+                # 3. from-addressの行
+                elif line_lower.startswith("from-address"):
+                    cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
+                    smtp_cmd_list.append(cleaned)
+                    
+                # 4. destinationの行の変換ルール
+                elif "destination" in line_lower:
+                    # destinationの後ろの内容を取得
+                    dest_content = line_stripped.replace("destination", "").strip()
+                    # destination-addresses [次のdestinationの内容] をスペース1個で繋ぐ
+                    cleaned_dest_line = f"destination-addresses {dest_content}"
+                    cleaned_dest_line = re.sub(r'\s+', ' ', cleaned_dest_line).strip()
+                    smtp_cmd_list.append(cleaned_dest_line)
+
+            if smtp_cmd_list:
+                # 最後に exit を3回追加
+                smtp_cmd_list.append("exit")
+                smtp_cmd_list.append("exit")
+                smtp_cmd_list.append("exit")
+                
+                smtp_generated_commands = "\n".join(smtp_cmd_list)
+                all_generated_cmds_dict["smtp"] = smtp_generated_commands
+            else:
+                smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
+        else:
+            smtp_raw_section = "ファイル内に「!\\nsmtp」から始まるSMTP設定が見つかりませんでした。"
+            smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
+            
+        col_smtp_box1, col_smtp_box2 = st.columns(2)
+        with col_smtp_box1:
+            show_custom_area("SMTP設定の内容の表示", smtp_raw_section, 250, "smtp_raw_detail", "smtp_source_detail.txt")
+        with col_smtp_box2:
+            show_custom_area("作成されたSMTPコマンド", smtp_generated_commands, 250, "smtp_gen_detail", "smtp_commands_detail.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
         # 🕒 タイムゾーン設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("🕒 タイムゾーン設定の精査と個別コマンド生成")
@@ -801,7 +887,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # ⚙️ その他設定内容表示とコマンド自動作成 (★修正：nacm groups group adminの行自体を除外)
+        # ⚙️ その他設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("⚙️ その他設定の精査と個別コマンド生成")
         
@@ -820,14 +906,12 @@ with tab1:
                 break
 
         if start_other_idx != -1 and end_other_idx != -1:
-            # 画面表示用のRawデータ（元設定）は範囲通り保持します
             other_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_other_idx, end_other_idx + 1)]
             other_raw_section = "\n".join(other_extracted_lines)
             
             other_cmd_lines = []
             
             for line in other_extracted_lines:
-                # ユーザー除外要件: nacm groups group adminの行自体をコマンド出力から排除
                 if line.lower().startswith("nacm groups group admin"):
                     continue
                 if line.startswith("!"):
@@ -924,7 +1008,8 @@ with tab3:
     st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
     
     combined_ordered_list = []
-    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other"]
+    # 順序指定に "smtp" を "proxy" の直後に追加
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict[key].strip()
