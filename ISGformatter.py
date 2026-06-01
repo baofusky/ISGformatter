@@ -596,8 +596,7 @@ with tab1:
             # 代替案：行単位での前方一致検索
             tz_found_lines = [l.strip() for l in base_cleaned_lines if l.strip().lower().startswith("timezone")]
             if tz_found_lines:
-                timezone_raw_section = "!\n" + "\n".join(tz_found_lines)
-                timezone_generated_commands = "\n".join(tz_found_lines) + "\nexit"
+                timezone_raw_section = "!\n" + "\n".join(tz_found_lines)             
             else:
                 timezone_raw_section = "ファイル内に条件を満たす「タイムゾーン設定（!\\ntimezone）」が見つかりませんでした。"
                 timezone_generated_commands = "タイムゾーン設定がないため、コマンドは生成されませんでした。"
