@@ -1025,23 +1025,24 @@ with tab2:
 # ==========================================
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
-    st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。")
+    st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。SMTPはNIC情報の後に配置されます。")
     
     combined_ordered_list = []
-    
-    # 修正箇所: "smtp" を "nic" の直後に配置
+    # SMTPをNICの後ろに移動（"nic", "smtp"）
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "smtp", "acl", "other"]
     
     for key in order_keys:
-        # SMTPの混入を避けるため、他のセクションの生成ロジックがクリーンであることを確認してください
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
-        # 不要なメッセージを除外してリストに追加
+        # 内容が空でなく、無効な文字列を含まない場合のみリストへ追加
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "見つかりませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
     
-    # 全コマンドを空行で区切って結合
+    # 修正箇所：リストの先頭に "conf" が含まれていない場合のみ追加
     all_commands_text = "\n\n".join(combined_ordered_list)
+    
+    if all_commands_text and not all_commands_text.startswith("conf"):
+        all_commands_text = "conf\n\n" + all_commands_text
     
     # 結果を表示
     if all_commands_text:
