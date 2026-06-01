@@ -1017,24 +1017,28 @@ with tab2:
 # ==========================================
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
-    st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
+    st.markdown("1ページ目で自動作成された各コマンド群（SMTPを除く）を一つの枠に結合しています。")
     
     combined_ordered_list = []
-    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other"]
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
-        # 辞書から内容を取得（存在しない場合は空文字）
+        # SMTPを除外する条件を追加
+        if key == "smtp":
+            continue
+            
+        # 1ページ目で計算済みの文字列を取得
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
-        # 内容が空でなく、かつ生成されなかった旨のメッセージを含まない場合のみリストへ追加
+        # 不要なメッセージを除外してリストに追加
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
     
-    # リストにあるすべてのコマンドを空行で区切って結合
+    # 全コマンドを空行で区切って結合
     all_commands_text = "\n\n".join(combined_ordered_list)
     
     # 結果を表示
     if all_commands_text:
-        show_custom_area("すべての作成済みコマンド一括表示", all_commands_text+smtp_generated_commands, 600, "all_cmds", "all_commands.txt")
+        show_custom_area("SMTPを除く作成済みコマンド一括表示", all_commands_text+smtp_generated_commands, 600, "all_cmds", "all_commands.txt")
     else:
-        st.info("コマンドが生成されていないか、1ページ目での処理が完了していません。")
+        st.info("表示可能なコマンドがありません。")
