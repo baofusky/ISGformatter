@@ -1023,18 +1023,21 @@ with tab3:
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
-           
-        # 1ページ目で計算済みの文字列を取得
+        # SMTPキーを除外する処理
+        if key == "smtp":
+            continue
+        
+        # 辞書から内容を取得
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
-        # 不要なメッセージを除外してリストに追加
+        # 内容が空でなく、無効な文字列を含まない場合のみリストへ追加
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
     
-    # 全コマンドを空行で区切って結合
+    # リストにあるコマンドを空行で区切って結合
     all_commands_text = "\n\n".join(combined_ordered_list)
     
-    # 結果を表示
+    # 結合した結果を表示
     if all_commands_text:
         show_custom_area("SMTPを除く作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
     else:
