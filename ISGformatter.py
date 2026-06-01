@@ -42,7 +42,7 @@ tab1, tab2, tab3 = st.tabs([
 
 # 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
-    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", 
+    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
     "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
 }
 
