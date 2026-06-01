@@ -741,7 +741,6 @@ with tab1:
                     elif b_lower.startswith("ip-address"):
                         ip_line = b_stripped
                 
-                # 全ての個別コマンド行に対して、連続する半角スペースを1つに整形する関数
                 def clean_space(txt):
                     return re.sub(r'\s+', ' ', txt).strip()
                 
@@ -752,7 +751,6 @@ with tab1:
                 if dhcp_line:
                     cmd_block.append(clean_space(dhcp_line))
                     
-                # speed と duplex を結合した後、間隔を確実に1スペースに制限
                 raw_speed_duplex = f"speed {speed_val} duplex {duplex_val}"
                 cmd_block.append(clean_space(raw_speed_duplex))
                 
@@ -777,6 +775,72 @@ with tab1:
             show_custom_area("NIC設定の内容の表示", nic_raw_section, 300, "nic_raw", "nic_info_source.txt")
         with col_nic2:
             show_custom_area("作成されたNICコマンド", nic_generated_commands, 300, "nic_gen", "nic_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # ⚙️ NEW: その他設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("⚙️ その他設定の精査と個別コマンド生成")
+        
+        other_raw_section = ""
+        other_generated_commands = ""
+        
+        start_other_idx = -1
+        end_other_idx = -1
+        
+        # 「authentication」から「nacm groups group reservedReadOnly」までの範囲をスキャン
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if start_other_idx == -1 and l_stripped.lower().startswith("authentication"):
+                start_other_idx = idx
+            if start_other_idx != -1 and "nacm groups group reservedreadonly" in l_stripped.lower():
+                end_other_idx = idx
+                break
+
+        if start_other_idx != -1 and end_other_idx != -1:
+            other_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_other_idx, end_other_idx + 1)]
+            other_raw_section = "\n".join(other_extracted_lines)
+            
+            other_cmd_lines = []
+            skip_next_line = False
+            
+            for idx, line in enumerate(other_extracted_lines):
+                # 直前の判定で「次の行をスキップ」フラグが立っていた場合、処理をジャンプしてフラグを寝かせる
+                if skip_next_line:
+                    skip_next_line = False
+                    continue
+                
+                # 1. !で始まる行をスキップ
+                if line.startswith("!"):
+                    continue
+                
+                # 2. 特定の3行をスキップ
+                if line in ["service Management", "service SNMP", "service WebRouter"]:
+                    continue
+                
+                # 3. nacm groupsで始まる行をスキップ
+                if line.startswith("nacm groups") and not line.startswith("nacm groups group admin") and not "nacm groups group reservedreadonly" in line.lower():
+                    continue
+                
+                # 4. nacm groups group adminの行自体は表示するが、「次の行」をスキップするフラグを立てる
+                if line == "nacm groups group admin":
+                    skip_next_line = True
+                
+                # スペースを一個に調整して追加
+                cleaned_line = re.sub(r'\s+', ' ', line).strip()
+                other_cmd_lines.append(cleaned_line)
+                
+            other_generated_commands = "\n".join(other_cmd_lines)
+        else:
+            other_raw_section = "ファイル内に条件を満たす「その他設定範囲（authentication ～ nacm groups group reservedReadOnly）」が見つかりませんでした。"
+            other_generated_commands = "その他設定がないため、コマンドは生成されませんでした。"
+            
+        col_oth1, col_oth2 = st.columns(2)
+        with col_oth1:
+            show_custom_area("その他設定の内容の表示", other_raw_section, 300, "other_raw", "other_info_source.txt")
+        with col_oth2:
+            show_custom_area("作成されたその他コマンド", other_generated_commands, 300, "other_gen", "other_commands.txt")
 
 
 # ==========================================
@@ -821,21 +885,4 @@ with tab2:
                 if target_str in s_line:
                     info["found"] = True
                     edited_sgos_lines.append(info["insert"])
-                    edited_sgos_lines.append(s_line)
-                    matched = True
-                    break
-            if not matched:
-                edited_sgos_lines.append(s_line)
-                
-        edited_sgos_text = "\n".join(edited_sgos_lines)
-        
-        show_custom_area("整形・コマンド補完後の設定内容", edited_sgos_text, 400, "sgos_edited", "sgos_configured.txt")
-        
-        st.markdown("---")
-        st.subheader("📊 依存関係コマンドの挿入処理結果レポート")
-        
-        for target_str, info in status_report.items():
-            if info["found"]:
-                st.write(f"✅️ **「{target_str}」** が見つかったため、直前に **「{info['insert']}」** の挿入を実行しました。")
-            else:
-                st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
+                    edited_sgos_lines.
