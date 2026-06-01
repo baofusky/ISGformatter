@@ -42,7 +42,7 @@ tab1, tab2, tab3 = st.tabs([
 
 # 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
-    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
+    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", 
     "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
 }
 
@@ -1023,10 +1023,7 @@ with tab3:
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
-        # SMTPを除外する条件を追加
-        if key == "smtp":
-            continue
-            
+           
         # 1ページ目で計算済みの文字列を取得
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
