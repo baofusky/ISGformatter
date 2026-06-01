@@ -405,6 +405,63 @@ with tab1:
         with col_hm2:
             show_custom_area("再構築された Healthmonitor コマンド枠", hm_generated_text, 250, "hm_gen", "health_commands.txt")
 
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🕒 【新規追加】NTP設定の読込とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🕒 NTP設定の読込とコマンド自動生成")
+        
+        ntp_raw_text = ""
+        ntp_generated_commands = ""
+        
+        # 💡 「!\nntp」から始まり「acl\nenable」の直前の「!」までを動的に抽出
+        ntp_match = re.search(r'(!\s*\n\s*ntp\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*acl\s*\n\s*enable|\n\s*acl\s*\n\s*enable)', string_data, re.IGNORECASE)
+        
+        if ntp_match:
+            ntp_raw_text = ntp_match.group(1).strip()
+            # 末尾の「!」閉じのパターンのブレを微調整し整形
+            if not ntp_raw_text.endswith("!"):
+                ntp_raw_text += "\n!"
+                
+            # --- コマンド自動生成ロジック ---
+            ntp_lines = ntp_raw_text.splitlines()
+            server_lines = []
+            has_enable = False
+            has_disable = False
+            
+            for n_line in ntp_lines:
+                n_line_stripped = n_line.strip()
+                if n_line_stripped.startswith("server "):
+                    server_lines.append(n_line_stripped)
+                if n_line_stripped == "enable":
+                    has_enable = True
+                if n_line_stripped == "disable":
+                    has_disable = True
+            
+            # コマンドの組み立て
+            commands_list = ["ntp"]               # 1行目: 固定
+            commands_list.extend(server_lines)   # 2行目以降: server行をそのまま順次配置
+            
+            # enable / disable の判定配置
+            if has_enable:
+                commands_list.append("enable")
+            elif has_disable:
+                commands_list.append("disable")
+                
+            commands_list.append("exit")          # 最終行: exit
+            
+            ntp_generated_commands = "\n".join(commands_list)
+        else:
+            ntp_raw_text = "ファイル内に指定条件を満たす「NTP設定セクション（!\\nntp ～ acl\\nenable の直上）」が見つかりませんでした。"
+            ntp_generated_commands = "NTP設定がないため、コマンドは生成されませんでした。"
+            
+        col_ntp1, col_ntp2 = st.columns(2)
+        with col_ntp1:
+            show_custom_area("NTP設定の内容の表示", ntp_raw_text, 220, "ntp_raw", "ntp_source.txt")
+        with col_ntp2:
+            show_custom_area("作成されたNTPコマンド", ntp_generated_commands, 220, "ntp_gen", "ntp_commands.txt")
+
 
 # ==========================================
 # 2ページ目：SGOSファイルの整形
