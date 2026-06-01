@@ -448,4 +448,124 @@ with tab1:
             
             ntp_generated_commands = "\n".join(commands_list)
         else:
-            ntp_raw_text = "
+            ntp_raw_text = "ファイル内に指定条件を満たす「NTP設定セクション（!\\nntp ～ acl\\nenable の直上）」が見つかりませんでした。"
+            ntp_generated_commands = "NTP設定がないため、コマンドは生成されませんでした。"
+            
+        col_ntp1, col_ntp2 = st.columns(2)
+        with col_ntp1:
+            show_custom_area("NTP設定の内容の表示", ntp_raw_text, 220, "ntp_raw", "ntp_source.txt")
+        with col_ntp2:
+            show_custom_area("作成されたNTPコマンド", ntp_generated_commands, 220, "ntp_gen", "ntp_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🛡️ 【位置変更】ACL設定内容表示とコマンド自動作成（NTPの下に配置）
+        # --------------------------------------
+        st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
+        
+        acl_raw_section = ""
+        acl_generated_commands = ""
+        
+        # 💡 「!\nacl」から始まり「proxy-settings」の直前の「!」までを動的に抽出
+        acl_section_match = re.search(r'(!\s*\n\s*acl\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*proxy-settings)', string_data, re.IGNORECASE)
+        
+        if acl_section_match:
+            acl_raw_section = acl_section_match.group(1).strip()
+            # 末尾が「!」で閉じられていない場合の微調整
+            if not acl_raw_section.endswith("!"):
+                acl_raw_section += "\n!"
+                
+            # --- コマンド自動生成ロジック ---
+            acl_sec_lines = acl_raw_section.splitlines()
+            acl_rule_lines = []
+            acl_status = "" # enable もしくは disable
+            
+            for a_line in acl_sec_lines:
+                a_line_stripped = a_line.strip()
+                if a_line_stripped.lower().startswith("rule"):
+                    acl_rule_lines.append(a_line_stripped)
+                if a_line_stripped in ["enable", "disable"]:
+                    acl_status = a_line_stripped
+            
+            # コマンドの組み立て
+            acl_cmd_list = ["acl"]                 # 1行目: acl
+            acl_cmd_list.extend(acl_rule_lines)    # ruleで始まる内容を行ごとに配置
+            
+            if acl_status:                         # ruleの最後の行の次行にenable/disableを配置
+                acl_cmd_list.append(acl_status)
+                
+            acl_cmd_list.append("exit")            # 最後にexit
+            
+            acl_generated_commands = "\n".join(acl_cmd_list)
+        else:
+            acl_raw_section = "ファイル内に指定条件を満たす「ACL設定セクション（!\\nacl ～ proxy-settings の直上）」が見つかりませんでした。"
+            acl_generated_commands = "ACL設定がないため、コマンドは生成されませんでした。"
+            
+        col_new_acl1, col_new_acl2 = st.columns(2)
+        with col_new_acl1:
+            show_custom_area("ACL設定の内容の表示", acl_raw_section, 250, "acl_raw_detail", "acl_source_detail.txt")
+        with col_new_acl2:
+            show_custom_area("作成されたACLコマンド", acl_generated_commands, 250, "acl_gen_detail", "acl_commands_detail.txt")
+
+
+# ==========================================
+# 2ページ目：SGOSファイルの整形
+# ==========================================
+with tab2:
+    st.header("SGOS設定ファイルの整形・依存関係補完")
+    
+    uploaded_sgos = st.file_uploader("SGOS設定ファイルを読み込んでください", type=["txt", "cfg"], key="sgos_upload")
+    
+    if uploaded_sgos is not None:
+        sgos_data = uploaded_sgos.getvalue().decode("utf-8")
+        
+        sgos_version = "未検出"
+        sgos_serial = "未検出"
+        
+        v_match = re.search(r'!-\s*Version:\s*(.*?)(?=\n|$)', sgos_data)
+        s_match = re.search(r'!-\s*Serial number:\s*(\d+)', sgos_data)
+        
+        if v_match:
+            sgos_version = v_match.group(1).replace("SGOS ", "").replace(" SWG Edition", "").strip()
+        if s_match:
+            sgos_serial = s_match.group(1).strip()
+            
+        st.subheader("📋 SGOS機器基本情報")
+        st.text(f"SGOSのバージョン:{sgos_version}\nシリアル番号:{sgos_serial}")
+        st.markdown("---")
+        
+        status_report = {
+            "edit format cifs ;mode": {"found": False, "insert": 'create format "cifs"'},
+            "edit format mapi ;mode": {"found": False, "insert": 'create format "mapi"'},
+            "edit log cifs ;mode": {"found": False, "insert": 'create log "cifs"'},
+            "edit log mapi ;mode": {"found": False, "insert": 'create log "mapi"'}
+        }
+        
+        sgos_lines = sgos_data.splitlines()
+        edited_sgos_lines = []
+        
+        for s_line in sgos_lines:
+            matched = False
+            for target_str, info in status_report.items():
+                if target_str in s_line:
+                    info["found"] = True
+                    edited_sgos_lines.append(info["insert"])
+                    edited_sgos_lines.append(s_line)
+                    matched = True
+                    break
+            if not matched:
+                edited_sgos_lines.append(s_line)
+                
+        edited_sgos_text = "\n".join(edited_sgos_lines)
+        
+        show_custom_area("整形・コマンド補完後の設定内容", edited_sgos_text, 400, "sgos_edited", "sgos_configured.txt")
+        
+        st.markdown("---")
+        st.subheader("📊 依存関係コマンドの挿入処理結果レポート")
+        
+        for target_str, info in status_report.items():
+            if info["found"]:
+                st.write(f"✅️ **「{target_str}」** が見つかったため、直前に **「{info['insert']}」** の挿入を実行しました。")
+            else:
+                st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
