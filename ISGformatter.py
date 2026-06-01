@@ -1027,17 +1027,17 @@ with tab3:
         if key == "smtp":
             continue
         
-        # 辞書から内容を取得
+        # 1ページ目で生成済みのテキストを取得
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
-        # 内容が空でなく、無効な文字列を含まない場合のみリストへ追加
+        # 不要なメッセージを除外してリストに追加
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
     
-    # リストにあるコマンドを空行で区切って結合
+    # 全コマンドを空行で区切って結合
     all_commands_text = "\n\n".join(combined_ordered_list)
     
-    # 結合した結果を表示
+    # 結果を表示
     if all_commands_text:
         show_custom_area("SMTPを除く作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
     else:
