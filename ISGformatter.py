@@ -648,7 +648,7 @@ with tab1:
             # ガード条件判定: destination行が存在していれば対応する全アドレスのコマンドを生成
             if has_destination_line and dest_addresses:
                 for addr in dest_addresses:
-                    smtp_cmd_list.append(f"destination-addresses {addr}")
+                    smtp_cmd_list.append(f"destination-addresses destination {addr}")
                 
             if smtp_cmd_list:
                 # 修正ポイント：destination行の数に応じてexitの数を調整
