@@ -577,34 +577,28 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 📧 SMTP設定の読込とコマンド自動作成（★不具合修正：destination行をスキップして他を出力する）
+        # 📧 SMTP設定の読込とコマンド自動作成（★不具合修正：階層関係・特定行スキップの完全制御）
         # --------------------------------------
         st.subheader("📧 SMTP設定の精査と個別コマンド生成")
         
         smtp_raw_section = ""
         smtp_generated_commands = ""
         
-        smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?destination.*?)(?=\n\s*!\s*\n|\n\s*\w|$)', string_data, re.IGNORECASE)
-        
-        if not smtp_section_match:
-            smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?)(?=\n\s*!\s*\n\s*timezone|\n\s*timezone)', string_data, re.IGNORECASE)
+        # 1. まずはファイルからSMTPセクションを大まかに抽出
+        smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?)(?=\n\s*!\s*\n\s*timezone|\n\s*timezone)', string_data, re.IGNORECASE)
 
         if smtp_section_match:
             raw_smtp_block = smtp_section_match.group(1).strip()
             smtp_block_lines = raw_smtp_block.splitlines()
             
-            last_dest_idx = -1
-            for idx, line_str in enumerate(smtp_block_lines):
-                if line_str.strip().lower().startswith("destination "):
-                    last_dest_idx = idx
-            
-            if last_dest_idx != -1:
-                smtp_block_lines = smtp_block_lines[:last_dest_idx + 1]
-            
+            # 生テキストの表示用として、末尾の「!」までの必要な範囲を確定
             smtp_raw_section = "\n".join(smtp_block_lines)
             
             smtp_cmd_list = []
+            has_destination_line = False
+            dest_address_val = ""
             
+            # ブロック内の全行を1行ずつ精査
             for line in smtp_block_lines:
                 line_stripped = line.strip()
                 line_lower = line_stripped.lower()
@@ -612,6 +606,7 @@ with tab1:
                 if not line_stripped or line_stripped == "!":
                     continue
                 
+                # 通常のSMTP共通設定行の変換
                 if line_lower.startswith("smtp"):
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
@@ -624,10 +619,17 @@ with tab1:
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # ★ 修正ポイント：destinationから始まる行はコマンド生成から「無視（スキップ）」する
+                # ★ 核心修正ポイント：先頭が「destination 」で始まる本物の送信先行を発見した場合
                 elif line_lower.startswith("destination "):
-                    continue
+                    has_destination_line = True
+                    dest_address_val = line_stripped[11:].strip() # "destination "の後ろの文字列を取得
 
+            # ★ 判定：本物のdestination行が存在していればコマンドを追加、無ければその行をスキップ
+            if has_destination_line and dest_address_val:
+                cleaned_dest_line = f"destination-addresses {dest_address_val}"
+                smtp_cmd_list.append(cleaned_dest_line)
+                
+            # 何かしらSMTP用のベースコマンドが作成されていれば（例：smtp, gateway, from-address等）
             if smtp_cmd_list:
                 smtp_cmd_list.append("exit")
                 smtp_cmd_list.append("exit")
@@ -639,7 +641,7 @@ with tab1:
                 smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
         else:
             smtp_raw_section = "ファイル内に「!\\nsmtp」から始まるSMTP設定が見つかりませんでした。"
-            smtp_generated_commands = "SMTP設定がないため、コマンドは生成 wilderness。"
+            smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
             
         col_smtp_box1, col_smtp_box2 = st.columns(2)
         with col_smtp_box1:
@@ -870,7 +872,7 @@ with tab1:
         # --------------------------------------
         # ⚙️ その他設定内容表示とコマンド自動作成
         # --------------------------------------
-        st.subheader("⚙️ その他設定 of the 精査と個別コマンド生成")
+        st.subheader("⚙️ その他設定の精査と個別コマンド生成")
         
         other_raw_section = ""
         other_generated_commands = ""
