@@ -885,4 +885,21 @@ with tab2:
                 if target_str in s_line:
                     info["found"] = True
                     edited_sgos_lines.append(info["insert"])
-                    edited_sgos_lines.
+                    edited_sgos_lines.append(s_line)
+                    matched = True
+                    break
+            if not matched:
+                edited_sgos_lines.append(s_line)
+                
+        edited_sgos_text = "\n".join(edited_sgos_lines)
+        
+        show_custom_area("整形・コマンド補完後の設定内容", edited_sgos_text, 400, "sgos_edited", "sgos_configured.txt")
+        
+        st.markdown("---")
+        st.subheader("📊 依存関係コマンドの挿入処理結果レポート")
+        
+        for target_str, info in status_report.items():
+            if info["found"]:
+                st.write(f"✅️ **「{target_str}」** が見つかったため、直前に **「{info['insert']}」** の挿入を実行しました。")
+            else:
+                st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
