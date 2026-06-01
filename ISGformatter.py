@@ -573,17 +573,11 @@ with tab1:
         else:
             proxy_raw_section = "ファイル内に指定条件を満たす「プロキシ設定セクション（!\\nproxy-settings ～ timezone の直上）」が見つかりませんでした。"
             proxy_generated_commands = "プロキシ設定がないため、コマンドは生成されませんでした。"
-            
-        col_proxy1, col_proxy2 = st.columns(2)
-        with col_proxy1:
-            show_custom_area("プロキシ設定の内容の表示", proxy_raw_section, 250, "proxy_raw", "proxy_source.txt")
-        with col_proxy2:
-            show_custom_area("作成されたプロキシコマンド", proxy_generated_commands, 250, "proxy_gen", "proxy_commands.txt")
 
         st.markdown("---")
 
         # --------------------------------------
-        # 📧 SMTP設定の読込とコマンド自動作成（★不具合修正：destination行の厳密化）
+        # 📧 SMTP設定の読込とコマンド自動作成（★不具合修正：destination行をスキップして他を出力する）
         # --------------------------------------
         st.subheader("📧 SMTP設定の精査と個別コマンド生成")
         
@@ -600,13 +594,9 @@ with tab1:
             smtp_block_lines = raw_smtp_block.splitlines()
             
             last_dest_idx = -1
-            has_destination_line = False
-            
-            # ★ 判定の厳密化：行の先頭が destination で始まっている行のみを本物としてカウント
             for idx, line_str in enumerate(smtp_block_lines):
                 if line_str.strip().lower().startswith("destination "):
                     last_dest_idx = idx
-                    has_destination_line = True
             
             if last_dest_idx != -1:
                 smtp_block_lines = smtp_block_lines[:last_dest_idx + 1]
@@ -634,17 +624,11 @@ with tab1:
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # ★ 変換ルールの厳密化：他の無関係な単語の巻き込みを防ぐため startswith を使用
+                # ★ 修正ポイント：destinationから始まる行はコマンド生成から「無視（スキップ）」する
                 elif line_lower.startswith("destination "):
-                    dest_content = line_stripped[11:].strip()  # "destination "の文字数分(11)をカット
-                    cleaned_dest_line = f"destination-addresses {dest_content}"
-                    cleaned_dest_line = re.sub(r'\s+', ' ', cleaned_dest_line).strip()
-                    smtp_cmd_list.append(cleaned_dest_line)
+                    continue
 
-            # ★ ガード条件：本当の「destination 」から始まる行がなければコマンドを出力しない
-            if not has_destination_line:
-                smtp_generated_commands = "destination設定が検出されなかったため、SMTPコマンドは生成されませんでした。"
-            elif smtp_cmd_list:
+            if smtp_cmd_list:
                 smtp_cmd_list.append("exit")
                 smtp_cmd_list.append("exit")
                 smtp_cmd_list.append("exit")
@@ -655,7 +639,7 @@ with tab1:
                 smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
         else:
             smtp_raw_section = "ファイル内に「!\\nsmtp」から始まるSMTP設定が見つかりませんでした。"
-            smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
+            smtp_generated_commands = "SMTP設定がないため、コマンドは生成 wilderness。"
             
         col_smtp_box1, col_smtp_box2 = st.columns(2)
         with col_smtp_box1:
@@ -886,7 +870,7 @@ with tab1:
         # --------------------------------------
         # ⚙️ その他設定内容表示とコマンド自動作成
         # --------------------------------------
-        st.subheader("⚙️ その他設定の精査と個別コマンド生成")
+        st.subheader("⚙️ その他設定 of the 精査と個別コマンド生成")
         
         other_raw_section = ""
         other_generated_commands = ""
