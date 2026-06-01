@@ -286,7 +286,7 @@ with tab1:
             extracted_lag_lines = base_cleaned_lines[lag_start_index + 1 : lag_start_index + 12]
             lag_raw_text = "\n".join(extracted_lag_lines)
             
-            # 💡 コマンド群の1行目に「lag」を追加
+            # コマンド群の1行目に「lag」を追加
             lag_commands.append("lag")
             
             for l_line in extracted_lag_lines:
@@ -298,7 +298,7 @@ with tab1:
                         if interface and interface != "-":
                             lag_commands.append(f"group id {g_id} add {interface}")
             
-            # 💡 ルールが存在する場合（lag行以外にもコマンドが作られた場合）、最後に exit コマンドを追加
+            # ルールが存在する場合（lag行以外にもコマンドが作られた場合）、最後に exit コマンドを追加
             if len(lag_commands) > 1:
                 lag_commands.append("exit")
                             
@@ -467,7 +467,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🛡️ ACL設定内容表示とコマンド自動作成（NTPの下に配置）
+        # 🛡️ ACL設定内容表示とコマンド自動作成 (新規ロジックへの修正)
         # --------------------------------------
         st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
         
@@ -479,30 +479,34 @@ with tab1:
         
         if acl_section_match:
             acl_raw_section = acl_section_match.group(1).strip()
-            # 末尾が「!」で閉じられていない場合の微調整
             if not acl_raw_section.endswith("!"):
                 acl_raw_section += "\n!"
                 
             # --- コマンド自動生成ロジック ---
             acl_sec_lines = acl_raw_section.splitlines()
             acl_rule_lines = []
-            acl_status = "" # enable もしくは disable
+            acl_status = "enable" # デフォルト値
             
             for a_line in acl_sec_lines:
                 a_line_stripped = a_line.strip()
+                # ruleで始まる行を抽出
                 if a_line_stripped.lower().startswith("rule"):
                     acl_rule_lines.append(a_line_stripped)
+                # 有効・無効ステータスの判定
                 if a_line_stripped in ["enable", "disable"]:
                     acl_status = a_line_stripped
             
-            # コマンドの組み立て
-            acl_cmd_list = ["acl"]                 # 1行目: acl
-            acl_cmd_list.extend(acl_rule_lines)    # ruleで始まる内容を行ごとに配置
+            # 🛠️ 新しい条件に基づくコマンド配列の組み立て
+            acl_cmd_list = []
+            acl_cmd_list.append("acl")          # 1行目: acl
+            acl_cmd_list.append(acl_status)     # 2行目: enable もしくは disable
+            acl_cmd_list.append("yes")          # 3行目: yes (固定)
             
-            if acl_status:                         # ruleの最後の行の次行にenable/disableを配置
-                acl_cmd_list.append(acl_status)
+            # 4行目以降: rule内容があれば行ごとに配置
+            if acl_rule_lines:
+                acl_cmd_list.extend(acl_rule_lines)
                 
-            acl_cmd_list.append("exit")            # 最後にexit
+            acl_cmd_list.append("exit")          # 最終行: exit
             
             acl_generated_commands = "\n".join(acl_cmd_list)
         else:
