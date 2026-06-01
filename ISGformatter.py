@@ -40,7 +40,7 @@ tab1, tab2, tab3 = st.tabs([
     "3ページ目：作成コマンドの一括出力"
 ])
 
-# 一括出力用コマンドの格納辞書を初期化 (smtpを追加)
+# 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
     "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
     "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
@@ -583,36 +583,35 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 📧 【新規追加】SMTP設定の読込とコマンド自動作成
+        # 📧 SMTP設定の読込とコマンド自動作成（★ガード条件修正）
         # --------------------------------------
         st.subheader("📧 SMTP設定の精査と個別コマンド生成")
         
         smtp_raw_section = ""
         smtp_generated_commands = ""
         
-        # ! \n smtp から最後の destination までの範囲を抽出
         smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?destination.*?)(?=\n\s*!\s*\n|\n\s*\w|$)', string_data, re.IGNORECASE)
         
-        # より頑健なフォールバック抽出
         if not smtp_section_match:
             smtp_section_match = re.search(r'(!\s*\n\s*smtp\s*[\s\S]*?)(?=\n\s*!\s*\n\s*timezone|\n\s*timezone)', string_data, re.IGNORECASE)
 
         if smtp_section_match:
             raw_smtp_block = smtp_section_match.group(1).strip()
-            
-            # 正確に 最後のdestinationの行まで を切り出す
             smtp_block_lines = raw_smtp_block.splitlines()
+            
             last_dest_idx = -1
+            has_destination_line = False
+            
             for idx, line_str in enumerate(smtp_block_lines):
                 if "destination" in line_str.lower():
                     last_dest_idx = idx
+                    has_destination_line = True
             
             if last_dest_idx != -1:
                 smtp_block_lines = smtp_block_lines[:last_dest_idx + 1]
             
             smtp_raw_section = "\n".join(smtp_block_lines)
             
-            # コマンド生成ロジック
             smtp_cmd_list = []
             
             for line in smtp_block_lines:
@@ -622,32 +621,28 @@ with tab1:
                 if not line_stripped or line_stripped == "!":
                     continue
                 
-                # 1. smtpの行
                 if line_lower.startswith("smtp"):
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # 2. gatewayの行
                 elif line_lower.startswith("gateway"):
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # 3. from-addressの行
                 elif line_lower.startswith("from-address"):
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # 4. destinationの行の変換ルール
                 elif "destination" in line_lower:
-                    # destinationの後ろの内容を取得
                     dest_content = line_stripped.replace("destination", "").strip()
-                    # destination-addresses [次のdestinationの内容] をスペース1個で繋ぐ
                     cleaned_dest_line = f"destination-addresses {dest_content}"
                     cleaned_dest_line = re.sub(r'\s+', ' ', cleaned_dest_line).strip()
                     smtp_cmd_list.append(cleaned_dest_line)
 
-            if smtp_cmd_list:
-                # 最後に exit を3回追加
+            # ★ 修正要件：destinationの行が1つも存在しなければ、コマンドを出力しないガード。
+            if not has_destination_line:
+                smtp_generated_commands = "destination設定が検出されなかったため、SMTPコマンドは生成されませんでした。"
+            elif smtp_cmd_list:
                 smtp_cmd_list.append("exit")
                 smtp_cmd_list.append("exit")
                 smtp_cmd_list.append("exit")
@@ -1008,11 +1003,11 @@ with tab3:
     st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
     
     combined_ordered_list = []
-    # 順序指定に "smtp" を "proxy" の直後に追加
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict[key].strip()
+        # 統合ガード：特定のスキップ文言や空のデータ、または「生成されませんでした」という文字列を含む場合は除外
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
             
