@@ -563,49 +563,30 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🕒 NEW: タイムゾーン設定内容表示とコマンド自動作成
+        # 🕒 タイムゾーン設定内容表示とコマンド自動作成
         # --------------------------------------
         st.subheader("🕒 タイムゾーン設定の精査と個別コマンド生成")
         
         timezone_raw_section = ""
         timezone_generated_commands = ""
         
-        # 💡 「!\ntimezone」で始まる箇所を動的に検索・抽出
-        timezone_match = re.search(r'(!\s*\n\s*timezone[\s\S]*?)(?=\n\s*!\s*\n|\Z)', string_data, re.IGNORECASE)
+        # 💡 行単位で「timezone」で始まる設定のみを精密抽出
+        tz_found_lines = [l.strip() for l in base_cleaned_lines if l.strip().lower().startswith("timezone")]
         
-        if timezone_match:
-            timezone_raw_section = timezone_match.group(1).strip()
-            
-            # --- コマンド自動生成ロジック ---
-            tz_lines = timezone_raw_section.splitlines()
-            tz_cmd_list = []
-            
-            for t_line in tz_lines:
-                t_line_stripped = t_line.strip()
-                # timezoneで始まる行をそのまま配置（先頭の「!」行は除外）
-                if t_line_stripped.lower().startswith("timezone"):
-                    tz_cmd_list.append(t_line_stripped)
-            
-            if tz_cmd_list:
-                # 最後に exit コマンドを配置
-                tz_cmd_list.append("exit")
-                timezone_generated_commands = "\n".join(tz_cmd_list)
-            else:
-                timezone_generated_commands = "タイムゾーンの設定行が検出されませんでした。"
+        if tz_found_lines:
+            # 左枠: timezoneで始まる行のみをそのまま表示
+            timezone_raw_section = "\n".join(tz_found_lines)
+            # 右枠: timezoneで始まる行のみをそのままコマンド化（exitは入れない）
+            timezone_generated_commands = "\n".join(tz_found_lines)
         else:
-            # 代替案：行単位での前方一致検索
-            tz_found_lines = [l.strip() for l in base_cleaned_lines if l.strip().lower().startswith("timezone")]
-            if tz_found_lines:
-                timezone_raw_section = "!\n" + "\n".join(tz_found_lines)             
-            else:
-                timezone_raw_section = "ファイル内に条件を満たす「タイムゾーン設定（!\\ntimezone）」が見つかりませんでした。"
-                timezone_generated_commands = "タイムゾーン設定がないため、コマンドは生成されませんでした。"
+            timezone_raw_section = "ファイル内に条件を満たす「タイムゾーン設定行（timezone...）」が見つかりませんでした。"
+            timezone_generated_commands = "タイムゾーン設定がないため、コマンドは生成されませんでした。"
                 
         col_tz1, col_tz2 = st.columns(2)
         with col_tz1:
-            show_custom_area("タイムゾーン設定の内容の表示", timezone_raw_section, 200, "tz_raw", "timezone_source.txt")
+            show_custom_area("タイムゾーン設定の内容の表示", timezone_raw_section, 180, "tz_raw", "timezone_source.txt")
         with col_tz2:
-            show_custom_area("作成されたタイムゾーンコマンド", timezone_generated_commands, 200, "tz_gen", "timezone_commands.txt")
+            show_custom_area("作成されたタイムゾーンコマンド", timezone_generated_commands, 180, "tz_gen", "timezone_commands.txt")
 
 
 # ==========================================
