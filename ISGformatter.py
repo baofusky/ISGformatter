@@ -926,6 +926,14 @@ with tab1:
             for line in other_extracted_lines:
                 if line.lower().startswith("nacm groups group admin"):
                     continue
+                if line.lower().startswith("smtp"):
+                    continue
+                if line.lower().startswith("gateway"):
+                    continue
+                if line.lower().startswith("from-address"):
+                    continue
+                if line.lower().startswith("destination-addresses"):
+                    continue 
                 if line.startswith("!"):
                     continue
                 if line in ["service Management", "service SNMP", "service WebRouter"]:
