@@ -583,7 +583,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 📧 SMTP設定の読込とコマンド自動作成（★ガード条件修正）
+        # 📧 SMTP設定の読込とコマンド自動作成（★不具合修正：destination行の厳密化）
         # --------------------------------------
         st.subheader("📧 SMTP設定の精査と個別コマンド生成")
         
@@ -602,8 +602,9 @@ with tab1:
             last_dest_idx = -1
             has_destination_line = False
             
+            # ★ 判定の厳密化：行の先頭が destination で始まっている行のみを本物としてカウント
             for idx, line_str in enumerate(smtp_block_lines):
-                if "destination" in line_str.lower():
+                if line_str.strip().lower().startswith("destination "):
                     last_dest_idx = idx
                     has_destination_line = True
             
@@ -633,13 +634,14 @@ with tab1:
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                elif "destination" in line_lower:
-                    dest_content = line_stripped.replace("destination", "").strip()
+                # ★ 変換ルールの厳密化：他の無関係な単語の巻き込みを防ぐため startswith を使用
+                elif line_lower.startswith("destination "):
+                    dest_content = line_stripped[11:].strip()  # "destination "の文字数分(11)をカット
                     cleaned_dest_line = f"destination-addresses {dest_content}"
                     cleaned_dest_line = re.sub(r'\s+', ' ', cleaned_dest_line).strip()
                     smtp_cmd_list.append(cleaned_dest_line)
 
-            # ★ 修正要件：destinationの行が1つも存在しなければ、コマンドを出力しないガード。
+            # ★ ガード条件：本当の「destination 」から始まる行がなければコマンドを出力しない
             if not has_destination_line:
                 smtp_generated_commands = "destination設定が検出されなかったため、SMTPコマンドは生成されませんでした。"
             elif smtp_cmd_list:
@@ -1007,7 +1009,6 @@ with tab3:
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict[key].strip()
-        # 統合ガード：特定のスキップ文言や空のデータ、または「生成されませんでした」という文字列を含む場合は除外
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
             
