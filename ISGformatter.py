@@ -1020,7 +1020,7 @@ with tab3:
     st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
     
     combined_ordered_list = []
-    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
         # 辞書から内容を取得（存在しない場合は空文字）
@@ -1035,6 +1035,6 @@ with tab3:
     
     # 結果を表示
     if all_commands_text:
-        show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
+        show_custom_area("すべての作成済みコマンド一括表示", all_commands_text+smtp_generated_commands, 600, "all_cmds", "all_commands.txt")
     else:
         st.info("コマンドが生成されていないか、1ページ目での処理が完了していません。")
