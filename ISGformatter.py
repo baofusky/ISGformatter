@@ -923,6 +923,8 @@ with tab1:
                     continue
                 if line.lower().startswith("from-address"):
                     continue
+                if line.lower().startswith("destination"):
+                    continue 
                 if line.lower().startswith("destination-addresses"):
                     continue 
                 if line.startswith("!"):
