@@ -1,13 +1,10 @@
 import json
 import re
 import streamlit as st
-
-# ページ全体のレイアウト設定
 st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
 
 st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
-# 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
     st.markdown(f"**{label}**")
     
@@ -39,16 +36,11 @@ tab1, tab2, tab3 = st.tabs([
     "2ページ目：SGOSファイルの整形",
     "3ページ目：作成コマンドの一括出力"
 ])
-
-# 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
     "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
     "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
 }
 
-# ==========================================
-# 1ページ目：ISGファイルの読込・整形・コマンド作成
-# ==========================================
 with tab1:
     st.header("ISGファイル情報の解析とコマンド自動生成")
     
@@ -126,9 +118,6 @@ with tab1:
 
         st.markdown("---")
         
-        # --------------------------------------
-        # 3. SNMP設定の読込と動的コマンド再構築
-        # --------------------------------------
         st.subheader("📡 SNMP設定の読込と動的コマンド生成")
         
         snmp_section_text = ""
@@ -279,9 +268,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🛠️ LAGの設定読込とコマンド変換
-        # --------------------------------------
         st.subheader("🔗 LAGの設定読込とコマンド変換")
         
         lag_raw_text = ""
@@ -328,9 +314,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # ❤️ Healthmonitorの読込と動的コマンド再構築
-        # --------------------------------------
         st.subheader("❤️ Healthmonitorの設定読込とコマンド再構築")
         
         hm_raw_text = ""
@@ -427,9 +410,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🕒 NTP設定の読込とコマンド自動作成
-        # --------------------------------------
         st.subheader("🕒 NTP設定の読込とコマンド自動生成")
         
         ntp_raw_text = ""
@@ -480,9 +460,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🛡️ ACL設定内容表示とコマンド自動作成
-        # --------------------------------------
         st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
         
         acl_raw_section = ""
@@ -530,9 +507,7 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🌐 プロキシ設定内容表示とコマンド自動作成
-        # --------------------------------------
+
         st.subheader("🌐 プロキシ設定の精査と個別コマンド生成")
         
         proxy_raw_section = ""
@@ -576,16 +551,11 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 📧 SMTP設定の読込とコマンド自動作成（★不具合完全修正：destination行の欠落を完全に解決）
-        # --------------------------------------
         st.subheader("📧 SMTP設定の精査と個別コマンド生成")
         
         smtp_raw_section = ""
         smtp_generated_commands = ""
         
-        # ★ 修正ポイント：テキスト全体から「smtpで始まる最初の行」から「最後に登場するdestinationで始まる行」までを完全にカバー
-        # [^\n]* で最後のdestination行全体を巻き込み、直後に続くインデントされた実データ行までを含めるため、最長一致で安全に抽出します。
         smtp_block_match = re.search(r'(smtp\b[\s\S]*?destination\b[^\n]*)', string_data, re.IGNORECASE)
 
         if smtp_block_match:
@@ -602,7 +572,7 @@ with tab1:
                 line_stripped = line.strip()
                 line_lower = line_stripped.lower()
                 
-                # ブロックの終了条件：smtp設定から十分離れ、次のセクションの区切り（!）が来た場合
+
                 if found_dest_end and (line_stripped == "!" or (not line.startswith(" ") and line_stripped and not line_lower.startswith("smtp") and not line_lower.startswith("gateway") and not line_lower.startswith("from-address") and not line_lower.startswith("destination"))):
                     break
                     
@@ -611,7 +581,6 @@ with tab1:
                 if line_lower.startswith("destination") or "destination" in line_lower:
                     found_dest_end = True # destination関係の記述が始まったフラグ
 
-            # 抽出したブロックテキストを表示用に格納
             smtp_raw_section = "\n".join(smtp_block_lines)
             
             smtp_cmd_list = []
@@ -638,23 +607,18 @@ with tab1:
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # destination行を発見した場合（インデント有無を問わず、本物の「destination 」で始まる行を抽出）
                 elif line_lower.startswith("destination "):
                     has_destination_line = True
                     addr_val = line_stripped[12:].strip()
                     if addr_val and addr_val not in dest_addresses:
                         dest_addresses.append(addr_val)
 
-            # ガード条件判定: destination行が存在していれば対応する全アドレスのコマンドを生成
             if has_destination_line and dest_addresses:
                 for addr in dest_addresses:
                     smtp_cmd_list.append(f"destination-addresses destination {addr}")
                     smtp_cmd_list.append("exit")
                 
             if smtp_cmd_list:
-                # 修正ポイント：destination行の数に応じてexitの数を調整
-                # 基本的なexit（smtp用、設定ブロック用）の2つに加え、
-                # destinationが存在する場合は、その数分だけ追加でexitを出力する
                 
                 # 1. 基本の終了コマンド
                 smtp_cmd_list.append("exit")
@@ -680,9 +644,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🕒 タイムゾーン設定内容表示とコマンド自動作成
-        # --------------------------------------
         st.subheader("🕒 タイムゾーン設定の精査と個別コマンド生成")
         
         timezone_raw_section = ""
@@ -706,9 +667,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🔑 ライセンス更新設定内容表示とコマンド自動作成
-        # --------------------------------------
         st.subheader("🔑 ライセンス更新設定の精査と個別コマンド生成")
         
         licensing_raw_section = ""
@@ -746,9 +704,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🖥️ マシン情報更新設定内容表示とコマンド自動作成
-        # --------------------------------------
         st.subheader("🖥️ マシン情報更新設定の精査と個別コマンド生成")
         
         machine_info_raw_section = ""
@@ -782,9 +737,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # 🔌 NIC設定内容表示とコマンド自動作成
-        # --------------------------------------
         st.subheader("🔌 NIC設定の精査と個別コマンド生成")
         
         nic_raw_section = ""
@@ -898,9 +850,6 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
-        # ⚙️ その他設定内容表示とコマンド自動作成
-        # --------------------------------------
         st.subheader("⚙️ その他設定の精査と個別コマンド生成")
         
         other_raw_section = ""
@@ -949,10 +898,6 @@ with tab1:
         with col_oth2:
             show_custom_area("作成されたその他コマンド", other_generated_commands, 300, "other_gen", "other_commands.txt")
 
-
-# ==========================================
-# 2ページ目：SGOSファイルの整形
-# ==========================================
 with tab2:
     st.header("SGOS設定ファイルの整形・依存関係補完")
     
@@ -1012,9 +957,6 @@ with tab2:
                 st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
 
 
-# ==========================================
-# 3ページ目：作成コマンドの一括出力
-# ==========================================
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
     st.markdown("1ページ目で自動作成された各コマンド群（SMTPを除く）を一つの枠に結合しています。")
@@ -1023,14 +965,13 @@ with tab3:
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
-        # SMTPキーを除外する処理
-        if key == "smtp":
+        # SMTPキーを除外する処理        if key == "smtp":
             continue
         
-        # 1ページ目で生成済みのテキストを取得
+
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
         
-        # 不要なメッセージを除外してリストに追加
+
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
     
