@@ -657,6 +657,7 @@ with tab1:
                 
                 # 1. 基本の終了コマンド
                 smtp_cmd_list.append("exit")
+                smtp_cmd_list.append("exit")
                              
                 # 2. destination-addresses が作成された行数分、さらにexitを追加する
                 for _ in dest_addresses:
