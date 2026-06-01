@@ -280,7 +280,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🛠️ LAGの設定読込とコマンド変換 (★修正：Interfaces列にNIC情報がない場合は作成しない)
+        # 🛠️ LAGの設定読込とコマンド変換
         # --------------------------------------
         st.subheader("🔗 LAGの設定読込とコマンド変換")
         
@@ -306,7 +306,6 @@ with tab1:
                     g_id = match.group(1)
                     interfaces = [i.strip() for i in match.group(2).split(",")]
                     for interface in interfaces:
-                        # ハイフンのみ、空文字、またはスペースの場合を除外してNIC情報があるかチェック
                         if interface and interface != "-" and not interface.isspace():
                             lag_commands.append(f"group id {g_id} add {interface}")
                             has_valid_interface = True
@@ -802,7 +801,7 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # ⚙️ その他設定内容表示とコマンド自動作成 (★修正：抽出範囲を authentication から nacm groups group admin までに変更)
+        # ⚙️ その他設定内容表示とコマンド自動作成 (★修正：nacm groups group adminの行自体を除外)
         # --------------------------------------
         st.subheader("⚙️ その他設定の精査と個別コマンド生成")
         
@@ -821,12 +820,16 @@ with tab1:
                 break
 
         if start_other_idx != -1 and end_other_idx != -1:
+            # 画面表示用のRawデータ（元設定）は範囲通り保持します
             other_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_other_idx, end_other_idx + 1)]
             other_raw_section = "\n".join(other_extracted_lines)
             
             other_cmd_lines = []
             
-            for idx, line in enumerate(other_extracted_lines):
+            for line in other_extracted_lines:
+                # ユーザー除外要件: nacm groups group adminの行自体をコマンド出力から排除
+                if line.lower().startswith("nacm groups group admin"):
+                    continue
                 if line.startswith("!"):
                     continue
                 if line in ["service Management", "service SNMP", "service WebRouter"]:
@@ -920,18 +923,14 @@ with tab3:
     st.header("📋 作成されたコマンドの一括出力")
     st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
     
-    # 指定順序に従って結合用リストを作成
     combined_ordered_list = []
-    
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other"]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict[key].strip()
-        # 有効なコマンドかつ除外用プレースホルダーテキストでない場合のみ一括枠に結合
         if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
             combined_ordered_list.append(cmd_content)
             
-    # 各コマンドブロックの間は2行改行で美しく連結
     final_combined_text = "\n\n".join(combined_ordered_list)
     
     if not final_combined_text.strip():
