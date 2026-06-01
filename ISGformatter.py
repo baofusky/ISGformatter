@@ -570,13 +570,12 @@ with tab1:
         timezone_raw_section = ""
         timezone_generated_commands = ""
         
-        # 💡 行単位で「timezone」で始まる設定のみを精密抽出
         tz_found_lines = [l.strip() for l in base_cleaned_lines if l.strip().lower().startswith("timezone")]
         
         if tz_found_lines:
-            # 左枠: timezoneで始まる行のみをそのまま表示
+            # 左枠: timezoneで始まる行のみを表示
             timezone_raw_section = "\n".join(tz_found_lines)
-            # 右枠: timezoneで始まる行のみをそのままコマンド化（exitは入れない）
+            # 右枠: exitを入れずにそのままコマンド化
             timezone_generated_commands = "\n".join(tz_found_lines)
         else:
             timezone_raw_section = "ファイル内に条件を満たす「タイムゾーン設定行（timezone...）」が見つかりませんでした。"
@@ -587,6 +586,51 @@ with tab1:
             show_custom_area("タイムゾーン設定の内容の表示", timezone_raw_section, 180, "tz_raw", "timezone_source.txt")
         with col_tz2:
             show_custom_area("作成されたタイムゾーンコマンド", timezone_generated_commands, 180, "tz_gen", "timezone_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🔑 NEW: ライセンス更新設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🔑 ライセンス更新設定の精査と個別コマンド生成")
+        
+        licensing_raw_section = ""
+        licensing_generated_commands = ""
+        
+        lic_found_lines = []
+        # 行単位でスキャンして「licensing」で始まる行とその次の「auto-update」行を安全に捕捉
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if l_stripped.lower().startswith("licensing"):
+                lic_found_lines.append(l_stripped)
+                # 次の行が auto-update で始まっているか確認
+                if idx + 1 < len(base_cleaned_lines):
+                    next_l_stripped = base_cleaned_lines[idx + 1].strip()
+                    if next_l_stripped.lower().startswith("auto-update"):
+                        lic_found_lines.append(next_l_stripped)
+                break  # 最初に見つかったブロックで確定
+
+        if lic_found_lines:
+            # 左枠: 各行ごとに行に分けてそのまま表示
+            licensing_raw_section = "\n".join(lic_found_lines)
+            
+            # 右枠: auto-update の状態を解析して正確な個別コマンドを生成
+            # デフォルトはfalse判定とし、文字列内に「true」が含まれているかを厳密にチェック
+            has_true = any("true" in line.lower() for line in lic_found_lines if line.lower().startswith("auto-update"))
+            
+            if has_true:
+                licensing_generated_commands = "licensing auto-update true"
+            else:
+                licensing_generated_commands = "licensing auto-update false"
+        else:
+            licensing_raw_section = "ファイル内に条件を満たす「ライセンス設定（licensing / auto-update）」が見つかりませんでした。"
+            licensing_generated_commands = "ライセンス設定がないため、コマンドは生成されませんでした。"
+            
+        col_lic1, col_lic2 = st.columns(2)
+        with col_lic1:
+            show_custom_area("ライセンス更新設定の内容の表示", licensing_raw_section, 180, "lic_raw", "licensing_source.txt")
+        with col_lic2:
+            show_custom_area("作成されたライセンス更新コマンド", licensing_generated_commands, 180, "lic_gen", "licensing_commands.txt")
 
 
 # ==========================================
