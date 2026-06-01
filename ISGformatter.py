@@ -1012,33 +1012,26 @@ with tab2:
                 st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
 
 
-# ==========================================
-# 3ページ目：作成コマンドの一括出力
-# ==========================================
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
-    st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
+    st.markdown("1ページ目で自動生成された各コマンドをすべて結合して表示します。")
     
     combined_ordered_list = []
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
-
+    
     for key in order_keys:
-    # 1ページ目で計算済みの文字列をそのまま使う
-     cmd_content = all_generated_cmds_dict[key].strip()
+        # 各辞書から文字列を取得
+        cmd_content = all_generated_cmds_dict.get(key, "").strip()
+        
+        # 内容が空でなく、生成不可メッセージではない場合のみ追加
+        if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "見つかりませんでした" not in cmd_content:
+            combined_ordered_list.append(cmd_content)
     
-    # 既存のチェック（「コマンドは生成されませんでした」等を除外）
-    if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
-       combined_ordered_list.append(cmd_content)
-            
-    final_combined_text = "\n\n".join(combined_ordered_list)
+    # リストにあるすべてのコマンドを連結（ダブル改行で区切る）
+    all_commands_text = "\n\n".join(combined_ordered_list)
     
-    if not final_combined_text.strip():
-        final_combined_text = "※まだ設定ファイルが読み込まれていないか、有効な作成コマンドはありません。"
-
-    show_custom_area(
-        label="一括統合コマンド枠 (コピー・一括保存用)", 
-        text_value=final_combined_text, 
-        height=550, 
-        unique_key="all_combined_cmds", 
-        download_filename="all_generated_commands.txt"
-    )
+    # 結果を表示
+    if all_commands_text:
+        show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
+    else:
+        st.warning("現在、表示するコマンドがありません。1ページ目で設定ファイルが読み込まれているか確認してください。")
