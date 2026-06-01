@@ -33,8 +33,18 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
     st.code(text_value, language="text", line_numbers=False)
 
 
-# タブ構造
-tab1, tab2 = st.tabs(["1ページ目：ISGファイルの読込・整形・コマンド作成", "2ページ目：SGOSファイルの整形"])
+# タブ構造（3ページ目を追加）
+tab1, tab2, tab3 = st.tabs([
+    "1ページ目：ISGファイルの読込・整形・コマンド作成", 
+    "2ページ目：SGOSファイルの整形",
+    "3ページ目：作成コマンドの一括出力"
+])
+
+# 一括出力用コマンドの格納辞書を初期化
+all_generated_cmds_dict = {
+    "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "",
+    "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
+}
 
 # ==========================================
 # 1ページ目：ISGファイルの読込・整形・コマンド作成
@@ -256,6 +266,7 @@ with tab1:
                 snmp_commands.append("exit\nexit\n")
                 
             snmp_generated_text = "\n".join(snmp_commands).replace("\n\n\n", "\n\n").strip()
+            all_generated_cmds_dict["snmp"] = snmp_generated_text
         else:
             snmp_section_text = "ファイル内に「agent enabled」から始まるSNMP設定が見つかりませんでした。"
             snmp_generated_text = "SNMP設定がないため、コマンドは生成されませんでした。"
@@ -286,7 +297,6 @@ with tab1:
             extracted_lag_lines = base_cleaned_lines[lag_start_index + 1 : lag_start_index + 12]
             lag_raw_text = "\n".join(extracted_lag_lines)
             
-            # コマンド群の1行目に「lag」を追加
             lag_commands.append("lag")
             
             for l_line in extracted_lag_lines:
@@ -298,11 +308,11 @@ with tab1:
                         if interface and interface != "-":
                             lag_commands.append(f"group id {g_id} add {interface}")
             
-            # ルールが存在する場合、最後に exit コマンドを追加
             if len(lag_commands) > 1:
                 lag_commands.append("exit")
                             
             lag_generated_text = "\n".join(lag_commands)
+            all_generated_cmds_dict["lag"] = lag_generated_text
         else:
             lag_raw_text = "ファイル内に「# lag view」に該当するセクションが見つかりませんでした。"
             lag_generated_text = "LAGコマンドは生成されませんでした。"
@@ -397,7 +407,11 @@ with tab1:
                         if "M" in alerts_section or "E" in alerts_section:
                             hm_commands.append(f"health-monitoring metric {matched_cmd_id} email enable")
                                 
-            hm_generated_text = "\n".join(hm_commands) if hm_commands else "追加コマンドは不要です。"
+            if hm_commands:
+                hm_generated_text = "\n".join(hm_commands)
+                all_generated_cmds_dict["hm"] = hm_generated_text
+            else:
+                hm_generated_text = "追加コマンドは不要です。"
         else:
             hm_raw_text = "ファイル内に「health-monitoring view settings」に該当するセクションが見つかりませんでした。"
             hm_generated_text = "Healthmonitorコマンドは生成されませんでした。"
@@ -450,6 +464,7 @@ with tab1:
             commands_list.append("exit")
             
             ntp_generated_commands = "\n".join(commands_list)
+            all_generated_cmds_dict["ntp"] = ntp_generated_commands
         else:
             ntp_raw_text = "ファイル内に指定条件を満たす「NTP設定セクション（!\\nntp ～ acl\\nenable の直上）」が見つかりませんでした。"
             ntp_generated_commands = "NTP設定がないため、コマンドは生成されませんでした。"
@@ -489,16 +504,17 @@ with tab1:
                     acl_status = a_line_stripped
             
             acl_cmd_list = []
-            acl_cmd_list.append("acl")          # 1行目: acl
-            acl_cmd_list.append(acl_status)     # 2行目: enable もしくは disable
-            acl_cmd_list.append("yes")          # 3行目: yes (固定)
+            acl_cmd_list.append("acl")
+            acl_cmd_list.append(acl_status)
+            acl_cmd_list.append("yes")
             
             if acl_rule_lines:
                 acl_cmd_list.extend(acl_rule_lines)
                 
-            acl_cmd_list.append("exit")          # 最終行: exit
+            acl_cmd_list.append("exit")
             
             acl_generated_commands = "\n".join(acl_cmd_list)
+            all_generated_cmds_dict["acl"] = acl_generated_commands
         else:
             acl_raw_section = "ファイル内に指定条件を満たす「ACL設定セクション（!\\nacl ～ proxy-settings の直上）」が見つかりませんでした。"
             acl_generated_commands = "ACL設定がないため、コマンドは生成されませんでした。"
@@ -550,6 +566,7 @@ with tab1:
             proxy_cmd_list.append("exit")
             
             proxy_generated_commands = "\n".join(proxy_cmd_list)
+            all_generated_cmds_dict["proxy"] = proxy_generated_commands
         else:
             proxy_raw_section = "ファイル内に指定条件を満たす「プロキシ設定セクション（!\\nproxy-settings ～ timezone の直上）」が見つかりませんでした。"
             proxy_generated_commands = "プロキシ設定がないため、コマンドは生成されませんでした。"
@@ -573,10 +590,9 @@ with tab1:
         tz_found_lines = [l.strip() for l in base_cleaned_lines if l.strip().lower().startswith("timezone")]
         
         if tz_found_lines:
-            # 左枠: timezoneで始まる行のみを表示
             timezone_raw_section = "\n".join(tz_found_lines)
-            # 右枠: exitを入れずにそのままコマンド化
             timezone_generated_commands = "\n".join(tz_found_lines)
+            all_generated_cmds_dict["tz"] = timezone_generated_commands
         else:
             timezone_raw_section = "ファイル内に条件を満たす「タイムゾーン設定行（timezone...）」が見つかりませんでした。"
             timezone_generated_commands = "タイムゾーン設定がないため、コマンドは生成されませんでした。"
@@ -616,6 +632,7 @@ with tab1:
                 licensing_generated_commands = "licensing auto-update true"
             else:
                 licensing_generated_commands = "licensing auto-update false"
+            all_generated_cmds_dict["lic"] = licensing_generated_commands
         else:
             licensing_raw_section = "ファイル内に条件を満たす「ライセンス設定（licensing / auto-update）」が見つかりませんでした。"
             licensing_generated_commands = "ライセンス設定がないため、コマンドは生成されませんでした。"
@@ -651,6 +668,7 @@ with tab1:
             extracted_machine_lines = [base_cleaned_lines[k].strip() for k in range(start_m_idx, end_m_idx + 1)]
             machine_info_raw_section = "\n".join(extracted_machine_lines)
             machine_info_generated_commands = "\n".join(extracted_machine_lines)
+            all_generated_cmds_dict["mach"] = machine_info_generated_commands
         else:
             machine_info_raw_section = "ファイル内に条件を満たす「マシン情報設定範囲（appliance-name ～ ip default-gateway）」が見つかりませんでした。"
             machine_info_generated_commands = "マシン情報設定がないため、コマンドは生成されませんでした。"
@@ -766,6 +784,7 @@ with tab1:
                 all_nic_cmds.append("\n".join(cmd_block))
                 
             nic_generated_commands = "\n\n".join(all_nic_cmds)
+            all_generated_cmds_dict["nic"] = nic_generated_commands
         else:
             nic_raw_section = "ファイル内に条件を満たす「NIC設定範囲（interface 0:0 ～ authentication直上の !）」が見つかりませんでした。"
             nic_generated_commands = "NIC設定がないため、コマンドは生成されませんでした。"
@@ -789,7 +808,6 @@ with tab1:
         start_other_idx = -1
         end_other_idx = -1
         
-        # 「authentication」から「nacm groups group reservedReadOnly」までの範囲をスキャン
         for idx, l in enumerate(base_cleaned_lines):
             l_stripped = l.strip()
             if start_other_idx == -1 and l_stripped.lower().startswith("authentication"):
@@ -806,31 +824,26 @@ with tab1:
             skip_next_line = False
             
             for idx, line in enumerate(other_extracted_lines):
-                # 直前の判定で「次の行をスキップ」フラグが立っていた場合
                 if skip_next_line:
                     skip_next_line = False
                     continue
-                
-                # 1. !で始まる行をスキップ
                 if line.startswith("!"):
                     continue
-                
-                # 2. 特定の3行をスキップ
                 if line in ["service Management", "service SNMP", "service WebRouter"]:
                     continue
-                
-                # 3. nacm groups で始まるすべての行を除外 (前方一致判定)
                 if line.startswith("nacm groups"):
-                    # ただし、除外対象が「nacm groups group admin」だった場合は、次行スキップフラグをセット
                     if line == "nacm groups group admin":
                         skip_next_line = True
                     continue
                 
-                # スペースを一個に調整して追加
                 cleaned_line = re.sub(r'\s+', ' ', line).strip()
                 other_cmd_lines.append(cleaned_line)
                 
-            other_generated_commands = "\n".join(other_cmd_lines)
+            if other_cmd_lines:
+                other_generated_commands = "\n".join(other_cmd_lines)
+                all_generated_cmds_dict["other"] = other_generated_commands
+            else:
+                other_generated_commands = "追加コマンドは不要です。"
         else:
             other_raw_section = "ファイル内に条件を満たす「その他設定範囲（authentication ～ nacm groups group reservedReadOnly）」が見つかりませんでした。"
             other_generated_commands = "その他設定がないため、コマンドは生成されませんでした。"
@@ -902,3 +915,35 @@ with tab2:
                 st.write(f"✅️ **「{target_str}」** が見つかったため、直前に **「{info['insert']}」** の挿入を実行しました。")
             else:
                 st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
+
+
+# ==========================================
+# 3ページ目：作成コマンドの一括出力 (新規追加)
+# ==========================================
+with tab3:
+    st.header("📋 作成されたコマンドの一括出力")
+    st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
+    
+    # 指定順序に従って結合用リストを作成
+    combined_ordered_list = []
+    
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "nic", "acl", "other"]
+    
+    for key in order_keys:
+        cmd_content = all_generated_cmds_dict[key].strip()
+        if cmd_content:
+            combined_ordered_list.append(cmd_content)
+            
+    # 各コマンドブロックの間は2行改行で美しく連結
+    final_combined_text = "\n\n".join(combined_ordered_list)
+    
+    if not final_combined_text.strip():
+        final_combined_text = "※まだ設定ファイルが読み込まれていないか、有効な作成コマンドはありません。"
+
+    show_custom_area(
+        label="一括統合コマンド枠 (コピー・一括保存用)", 
+        text_value=final_combined_text, 
+        height=550, 
+        unique_key="all_combined_cmds", 
+        download_filename="all_generated_commands.txt"
+    )
