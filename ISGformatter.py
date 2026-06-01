@@ -115,6 +115,57 @@ with tab1:
             show_custom_area("ACL抜き取り内容枠", acl_text, 250, "acl", "acl_extracted.txt")
 
         st.markdown("---")
+
+        # --------------------------------------
+        # 🛡️ 【新規追加】ACL設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
+        
+        acl_raw_section = ""
+        acl_generated_commands = ""
+        
+        # 💡 「!\nacl」から始まり「proxy-settings」の直前の「!」までを動的に抽出
+        acl_section_match = re.search(r'(!\s*\n\s*acl\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*proxy-settings)', string_data, re.IGNORECASE)
+        
+        if acl_section_match:
+            acl_raw_section = acl_section_match.group(1).strip()
+            # 末尾が「!」で閉じられていない場合の微調整
+            if not acl_raw_section.endswith("!"):
+                acl_raw_section += "\n!"
+                
+            # --- コマンド自動生成ロジック ---
+            acl_sec_lines = acl_raw_section.splitlines()
+            acl_rule_lines = []
+            acl_status = "" # enable もしくは disable
+            
+            for a_line in acl_sec_lines:
+                a_line_stripped = a_line.strip()
+                if a_line_stripped.lower().startswith("rule"):
+                    acl_rule_lines.append(a_line_stripped)
+                if a_line_stripped in ["enable", "disable"]:
+                    acl_status = a_line_stripped
+            
+            # コマンドの組み立て
+            acl_cmd_list = ["acl"]                 # 1行目: acl
+            acl_cmd_list.extend(acl_rule_lines)    # ruleで始まる内容を行ごとに配置
+            
+            if acl_status:                         # ruleの最後の行の次行にenable/disableを配置
+                acl_cmd_list.append(acl_status)
+                
+            acl_cmd_list.append("exit")            # 最後にexit
+            
+            acl_generated_commands = "\n".join(acl_cmd_list)
+        else:
+            acl_raw_section = "ファイル内に指定条件を満たす「ACL設定セクション（!\\nacl ～ proxy-settings の直上）」が見つかりませんでした。"
+            acl_generated_commands = "ACL設定がないため、コマンドは生成されませんでした。"
+            
+        col_new_acl1, col_new_acl2 = st.columns(2)
+        with col_new_acl1:
+            show_custom_area("ACL設定の内容の表示", acl_raw_section, 250, "acl_raw_detail", "acl_source_detail.txt")
+        with col_new_acl2:
+            show_custom_area("作成されたACLコマンド", acl_generated_commands, 250, "acl_gen_detail", "acl_commands_detail.txt")
+
+        st.markdown("---")
         
         # --------------------------------------
         # 3. SNMP設定の読込と動的コマンド再構築
@@ -408,23 +459,20 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 🕒 【新規追加】NTP設定の読込とコマンド自動作成
+        # 🕒 NTP設定の読込とコマンド自動作成
         # --------------------------------------
         st.subheader("🕒 NTP設定の読込とコマンド自動生成")
         
         ntp_raw_text = ""
         ntp_generated_commands = ""
         
-        # 💡 「!\nntp」から始まり「acl\nenable」の直前の「!」までを動的に抽出
         ntp_match = re.search(r'(!\s*\n\s*ntp\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*acl\s*\n\s*enable|\n\s*acl\s*\n\s*enable)', string_data, re.IGNORECASE)
         
         if ntp_match:
             ntp_raw_text = ntp_match.group(1).strip()
-            # 末尾の「!」閉じのパターンのブレを微調整し整形
             if not ntp_raw_text.endswith("!"):
                 ntp_raw_text += "\n!"
                 
-            # --- コマンド自動生成ロジック ---
             ntp_lines = ntp_raw_text.splitlines()
             server_lines = []
             has_enable = False
@@ -439,17 +487,15 @@ with tab1:
                 if n_line_stripped == "disable":
                     has_disable = True
             
-            # コマンドの組み立て
-            commands_list = ["ntp"]               # 1行目: 固定
-            commands_list.extend(server_lines)   # 2行目以降: server行をそのまま順次配置
+            commands_list = ["ntp"]
+            commands_list.extend(server_lines)
             
-            # enable / disable の判定配置
             if has_enable:
                 commands_list.append("enable")
             elif has_disable:
                 commands_list.append("disable")
                 
-            commands_list.append("exit")          # 最終行: exit
+            commands_list.append("exit")
             
             ntp_generated_commands = "\n".join(commands_list)
         else:
