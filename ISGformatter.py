@@ -1021,11 +1021,14 @@ with tab3:
     
     combined_ordered_list = []
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
-    
+
     for key in order_keys:
-        cmd_content = all_generated_cmds_dict[key].strip()
-        if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
-            combined_ordered_list.append(cmd_content)
+    # 1ページ目で計算済みの文字列をそのまま使う
+    　cmd_content = all_generated_cmds_dict[key].strip()
+    
+    # 既存のチェック（「コマンドは生成されませんでした」等を除外）
+    　if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
+        combined_ordered_list.append(cmd_content)
             
     final_combined_text = "\n\n".join(combined_ordered_list)
     
