@@ -577,26 +577,46 @@ with tab1:
         st.markdown("---")
 
         # --------------------------------------
-        # 📧 SMTP設定の読込とコマンド自動作成（★不具合完全修正：smtp行から最後のdestination行までを厳格に抽出）
+        # 📧 SMTP設定の読込とコマンド自動作成（★不具合完全修正：destination行の欠落を完全に解決）
         # --------------------------------------
         st.subheader("📧 SMTP設定の精査と個別コマンド生成")
         
         smtp_raw_section = ""
         smtp_generated_commands = ""
         
-        # ★ 修正：テキスト全体から「smtpで始まる最初の行」から「最後に登場するdestinationで始まる行」までを最優先で切り出す
+        # ★ 修正ポイント：テキスト全体から「smtpで始まる最初の行」から「最後に登場するdestinationで始まる行」までを完全にカバー
+        # [^\n]* で最後のdestination行全体を巻き込み、直後に続くインデントされた実データ行までを含めるため、最長一致で安全に抽出します。
         smtp_block_match = re.search(r'(smtp\b[\s\S]*?destination\b[^\n]*)', string_data, re.IGNORECASE)
 
         if smtp_block_match:
-            raw_smtp_block = smtp_block_match.group(1).strip()
-            smtp_block_lines = raw_smtp_block.splitlines()
+            # 確実を期すため、マッチした位置以降で destination-addresses 階層が閉じる（または次の ! や空行）まで行単位でスキャン
+            start_pos = smtp_block_match.start()
+            rem_text = string_data[start_pos:]
+            rem_lines = rem_text.splitlines()
             
-            # 抽出したブロックそのものを表示用として格納
+            smtp_block_lines = []
+            capture = True
+            found_dest_end = False
+            
+            for line in rem_lines:
+                line_stripped = line.strip()
+                line_lower = line_stripped.lower()
+                
+                # ブロックの終了条件：smtp設定から十分離れ、次のセクションの区切り（!）が来た場合
+                if found_dest_end and (line_stripped == "!" or (not line.startswith(" ") and line_stripped and not line_lower.startswith("smtp") and not line_lower.startswith("gateway") and not line_lower.startswith("from-address") and not line_lower.startswith("destination"))):
+                    break
+                    
+                smtp_block_lines.append(line)
+                
+                if line_lower.startswith("destination") or "destination" in line_lower:
+                    found_dest_end = True # destination関係の記述が始まったフラグ
+
+            # 抽出したブロックテキストを表示用に格納
             smtp_raw_section = "\n".join(smtp_block_lines)
             
             smtp_cmd_list = []
             has_destination_line = False
-            dest_address_val = ""
+            dest_addresses = []
             
             for line in smtp_block_lines:
                 line_stripped = line.strip()
@@ -618,16 +638,17 @@ with tab1:
                     cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
                     smtp_cmd_list.append(cleaned)
                     
-                # destination行を発見した場合
+                # destination行を発見した場合（インデント有無を問わず、本物の「destination 」で始まる行を抽出）
                 elif line_lower.startswith("destination "):
                     has_destination_line = True
-                    # "destination "（12文字）に続く引数部分を抽出
-                    dest_address_val = line_stripped[12:].strip()
+                    addr_val = line_stripped[12:].strip()
+                    if addr_val and addr_val not in dest_addresses:
+                        dest_addresses.append(addr_val)
 
-            # ガード条件: destination行が存在する場合のみ追加。存在しなければスキップ。
-            if has_destination_line and dest_address_val:
-                cleaned_dest_line = f"destination-addresses {dest_address_val}"
-                smtp_cmd_list.append(cleaned_dest_line)
+            # ガード条件判定: destination行が存在していれば対応する全アドレスのコマンドを生成
+            if has_destination_line and dest_addresses:
+                for addr in dest_addresses:
+                    smtp_cmd_list.append(f"destination-addresses {addr}")
                 
             if smtp_cmd_list:
                 smtp_cmd_list.append("exit")
