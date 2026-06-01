@@ -2,13 +2,16 @@ import json
 import re
 import streamlit as st
 
+# ページ全体のレイアウト設定
 st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
 
 st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
+# 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
     st.markdown(f"**{label}**")
     
+    # ダウンロードボタン用のカラム配置
     title_col, dl_col = st.columns([3, 1.2])
     
     with title_col:
@@ -26,20 +29,26 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
             use_container_width=True
         )
 
+    # st.text_areaの代わりにst.codeを使用することで、確実にコピー機能を提供します。
     st.code(text_value, language="text", line_numbers=False)
 
 
+# タブ構造
 tab1, tab2, tab3 = st.tabs([
     "1ページ目：ISGファイルの読込・整形・コマンド作成", 
     "2ページ目：SGOSファイルの整形",
     "3ページ目：作成コマンドの一括出力"
 ])
 
+# 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
     "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
     "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": ""
 }
 
+# ==========================================
+# 1ページ目：ISGファイルの読込・整形・コマンド作成
+# ==========================================
 with tab1:
     st.header("ISGファイル情報の解析とコマンド自動生成")
     
@@ -117,6 +126,9 @@ with tab1:
 
         st.markdown("---")
         
+        # --------------------------------------
+        # 3. SNMP設定の読込と動的コマンド再構築
+        # --------------------------------------
         st.subheader("📡 SNMP設定の読込と動的コマンド生成")
         
         snmp_section_text = ""
@@ -246,7 +258,6 @@ with tab1:
                         if j_name in parsed_access:
                             acc = parsed_access[j_name]
                             r_view = acc["read"]
-                            
                             if r_view in parsed_views:
                                 snmp_commands.append(f"snmp vacm view {r_view} subtree {parsed_views[r_view]['subtree']} {parsed_views[r_view]['type']}")
                             
@@ -267,3 +278,767 @@ with tab1:
             show_custom_area("分析・再構築された SNMP コマンド枠", snmp_generated_text, 350, "snmp_gen", "snmp_commands.txt")
 
         st.markdown("---")
+
+        # --------------------------------------
+        # 🛠️ LAGの設定読込とコマンド変換
+        # --------------------------------------
+        st.subheader("🔗 LAGの設定読込とコマンド変換")
+        
+        lag_raw_text = ""
+        lag_commands = []
+        
+        lag_start_index = -1
+        for idx, l in enumerate(base_cleaned_lines):
+            if "lag view" in l.lower():
+                lag_start_index = idx
+                break
+        
+        if lag_start_index != -1:
+            extracted_lag_lines = base_cleaned_lines[lag_start_index + 1 : lag_start_index + 12]
+            lag_raw_text = "\n".join(extracted_lag_lines)
+            
+            lag_commands.append("lag")
+            has_valid_interface = False
+            
+            for l_line in extracted_lag_lines:
+                match = re.match(r'^(\d+)\s+([\d:, ]+)', l_line.strip())
+                if match:
+                    g_id = match.group(1)
+                    interfaces = [i.strip() for i in match.group(2).split(",")]
+                    for interface in interfaces:
+                        if interface and interface != "-" and not interface.isspace():
+                            lag_commands.append(f"group id {g_id} add {interface}")
+                            has_valid_interface = True
+            
+            if has_valid_interface and len(lag_commands) > 1:
+                lag_commands.append("exit")
+                lag_generated_text = "\n".join(lag_commands)
+                all_generated_cmds_dict["lag"] = lag_generated_text
+            else:
+                lag_generated_text = "Interfaces列に有効なNIC情報が検出されなかったため、LAGコマンドは生成されませんでした。"
+        else:
+            lag_raw_text = "ファイル内に「# lag view」に該当するセクションが見つかりませんでした。"
+            lag_generated_text = "LAGコマンドは生成されませんでした。"
+
+        col_lag1, col_lag2 = st.columns(2)
+        with col_lag1:
+            show_custom_area("LAG view 設定内容枠 (ヘッダー下の11行を自動抽出)", lag_raw_text, 220, "lag_raw", "lag_source.txt")
+        with col_lag2:
+            show_custom_area("作成された LAG コマンド枠", lag_generated_text, 220, "lag_gen", "lag_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # ❤️ Healthmonitorの読込と動的コマンド再構築
+        # --------------------------------------
+        st.subheader("❤️ Healthmonitorの設定読込とコマンド再構築")
+        
+        hm_raw_text = ""
+        hm_commands = []
+        
+        hm_start_index = -1
+        for idx, l in enumerate(base_cleaned_lines):
+            cleaned_l = l.lower().replace("-", " ").replace("_", " ")
+            if "health" in cleaned_l and "monitoring" in cleaned_l and "settings" in cleaned_l:
+                hm_start_index = idx
+                break
+        
+        if hm_start_index != -1:
+            full_hm_lines = base_cleaned_lines[hm_start_index : hm_start_index + 40]
+            
+            start_target_idx = -1
+            end_target_idx = -1
+            
+            for idx, line in enumerate(full_hm_lines):
+                line_str = line.strip()
+                if line_str.startswith("CPU Utilization"):
+                    start_target_idx = idx
+                if line_str.startswith("Voltage Sensors"):
+                    end_target_idx = idx
+                    break
+            
+            if start_target_idx != -1 and end_target_idx != -1:
+                extracted_hm_lines = full_hm_lines[start_target_idx : end_target_idx + 1]
+            else:
+                extracted_hm_lines = full_hm_lines
+            
+            hm_raw_text = "\n".join(extracted_hm_lines)
+            
+            metric_mapping = {
+                "CPU Utilization": "cpu-util",
+                "Memory Utilization": "memory-util",
+                "Voltage Sensors": "voltage-sensors",
+                "Current Sensors": "current-sensors",
+                "Fan Sensors": "fan-sensors",
+                "Power Supplies": "power-supplies",
+                "RAID raid1-1 Working Members": "raid-status-raid1-1",
+                "Temperature Sensors": "temperature-sensors",
+                "Appliance Certificate Validation Status": "certificate-validation"
+            }
+            
+            for line_data in extracted_hm_lines:
+                line_stripped = line_data.strip()
+                if not line_stripped or "---" in line_stripped:
+                    continue
+                
+                matched_cmd_id = None
+                for keyword, cmd_id in metric_mapping.items():
+                    if keyword in line_stripped:
+                        matched_cmd_id = cmd_id
+                        break
+                
+                if matched_cmd_id:
+                    thresholds = re.findall(r'(\d+)\s*(?:%|days)', line_stripped)
+                    
+                    if matched_cmd_id == "cpu-util" and len(thresholds) >= 2:
+                        if thresholds[0] != "85":
+                            hm_commands.append(f"health-monitoring metric cpu-util high-warning-threshold {thresholds[0]}")
+                        if thresholds[1] != "95":
+                            hm_commands.append(f"health-monitoring metric cpu-util high-critical-threshold {thresholds[1]}")
+                            
+                    elif matched_cmd_id == "memory-util" and len(thresholds) >= 2:
+                        if thresholds[0] != "80":
+                            hm_commands.append(f"health-monitoring metric memory-util high-warning-threshold {thresholds[0]}")
+                        if thresholds[1] != "90":
+                            hm_commands.append(f"health-monitoring metric memory-util high-critical-threshold {thresholds[1]}")
+                    
+                    parts = line_stripped.split('|')
+                    if len(parts) >= 2:
+                        alerts_section = parts[-1].strip()
+                        if "T" in alerts_section:
+                            hm_commands.append(f"health-monitoring metric {matched_cmd_id} trap enable")
+                        if "M" in alerts_section or "E" in alerts_section:
+                            hm_commands.append(f"health-monitoring metric {matched_cmd_id} email enable")
+                                
+            if hm_commands:
+                hm_generated_text = "\n".join(hm_commands)
+                all_generated_cmds_dict["hm"] = hm_generated_text
+            else:
+                hm_generated_text = "追加コマンドは不要です。"
+        else:
+            hm_raw_text = "ファイル内に「health-monitoring view settings」に該当するセクションが見つかりませんでした。"
+            hm_generated_text = "Healthmonitorコマンドは生成されませんでした。"
+
+        col_hm1, col_hm2 = st.columns(2)
+        with col_hm1:
+            show_custom_area("Healthmonitor 設定内容枠 (指定範囲を自動抽出)", hm_raw_text, 250, "hm_raw", "health_source.txt")
+        with col_hm2:
+            show_custom_area("再構築された Healthmonitor コマンド枠", hm_generated_text, 250, "hm_gen", "health_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🕒 NTP設定の読込とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🕒 NTP設定の読込とコマンド自動生成")
+        
+        ntp_raw_text = ""
+        ntp_generated_commands = ""
+        
+        ntp_match = re.search(r'(!\s*\n\s*ntp\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*acl\s*\n\s*enable|\n\s*acl\s*\n\s*enable)', string_data, re.IGNORECASE)
+        
+        if ntp_match:
+            ntp_raw_text = ntp_match.group(1).strip()
+            if not ntp_raw_text.endswith("!"):
+                ntp_raw_text += "\n!"
+                
+            ntp_lines = ntp_raw_text.splitlines()
+            server_lines = []
+            has_enable = False
+            has_disable = False
+            
+            for n_line in ntp_lines:
+                n_line_stripped = n_line.strip()
+                if n_line_stripped.startswith("server "):
+                    server_lines.append(n_line_stripped)
+                if n_line_stripped == "enable":
+                    has_enable = True
+                if n_line_stripped == "disable":
+                    has_disable = True
+            
+            commands_list = ["ntp"]
+            commands_list.extend(server_lines)
+            
+            if has_enable:
+                commands_list.append("enable")
+            elif has_disable:
+                commands_list.append("disable")
+                
+            commands_list.append("exit")
+            
+            ntp_generated_commands = "\n".join(commands_list)
+            all_generated_cmds_dict["ntp"] = ntp_generated_commands
+        else:
+            ntp_raw_text = "ファイル内に指定条件を満たす「NTP設定セクション（!\\nntp ～ acl\\nenable の直上）」が見つかりませんでした。"
+            ntp_generated_commands = "NTP設定がないため、コマンドは生成されませんでした。"
+            
+        col_ntp1, col_ntp2 = st.columns(2)
+        with col_ntp1:
+            show_custom_area("NTP設定の内容の表示", ntp_raw_text, 220, "ntp_raw", "ntp_source.txt")
+        with col_ntp2:
+            show_custom_area("作成されたNTPコマンド", ntp_generated_commands, 220, "ntp_gen", "ntp_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🛡️ ACL設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🛡️ ACL設定の精査と個別コマンド生成")
+        
+        acl_raw_section = ""
+        acl_generated_commands = ""
+        
+        acl_section_match = re.search(r'(!\s*\n\s*acl\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*proxy-settings)', string_data, re.IGNORECASE)
+        
+        if acl_section_match:
+            acl_raw_section = acl_section_match.group(1).strip()
+            if not acl_raw_section.endswith("!"):
+                acl_raw_section += "\n!"
+                
+            acl_sec_lines = acl_raw_section.splitlines()
+            acl_rule_lines = []
+            acl_status = "enable"
+            
+            for a_line in acl_sec_lines:
+                a_line_stripped = a_line.strip()
+                if a_line_stripped.lower().startswith("rule"):
+                    acl_rule_lines.append(a_line_stripped)
+                if a_line_stripped in ["enable", "disable"]:
+                    acl_status = a_line_stripped
+            
+            acl_cmd_list = []
+            acl_cmd_list.append("acl")
+            acl_cmd_list.append(acl_status)
+            acl_cmd_list.append("yes")
+            
+            if acl_rule_lines:
+                acl_cmd_list.extend(acl_rule_lines)
+                
+            acl_cmd_list.append("exit")
+            
+            acl_generated_commands = "\n".join(acl_cmd_list)
+            all_generated_cmds_dict["acl"] = acl_generated_commands
+        else:
+            acl_raw_section = "ファイル内に指定条件を満たす「ACL設定セクション（!\\nacl ～ proxy-settings の直上）」が見つかりませんでした。"
+            acl_generated_commands = "ACL設定がないため、コマンドは生成されませんでした。"
+            
+        col_new_acl1, col_new_acl2 = st.columns(2)
+        with col_new_acl1:
+            show_custom_area("ACL設定の内容の表示", acl_raw_section, 250, "acl_raw_detail", "acl_source_detail.txt")
+        with col_new_acl2:
+            show_custom_area("作成されたACLコマンド", acl_generated_commands, 250, "acl_gen_detail", "acl_commands_detail.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🌐 プロキシ設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🌐 プロキシ設定の精査と個別コマンド生成")
+        
+        proxy_raw_section = ""
+        proxy_generated_commands = ""
+        
+        proxy_section_match = re.search(r'(!\s*\n\s*proxy-settings\s*[\s\S]*?)\s*(?=\n\s*!\s*\n\s*timezone)', string_data, re.IGNORECASE)
+        
+        if proxy_section_match:
+            proxy_raw_section = proxy_section_match.group(1).strip()
+            if not proxy_raw_section.endswith("!"):
+                proxy_raw_section += "\n!"
+                
+            proxy_sec_lines = proxy_raw_section.splitlines()
+            proxy_status = "enable"
+            
+            proxy_cmd_list = ["proxy-settings"]
+            
+            for p_line in proxy_sec_lines:
+                p_line_stripped = p_line.strip()
+                
+                if p_line_stripped.lower().startswith("host ") or p_line_stripped.lower().startswith("port "):
+                    proxy_cmd_list.append(p_line_stripped)
+                    
+                if p_line_stripped.lower().startswith("username"):
+                    user_val = p_line_stripped[8:].strip()
+                    clean_user_val = user_val.replace('"', '').replace("'", "").strip()
+                    if clean_user_val and user_val != '""':
+                        proxy_cmd_list.append(p_line_stripped)
+                        
+                if p_line_stripped in ["enable", "disable"]:
+                    proxy_status = p_line_stripped
+            
+            proxy_cmd_list.append(proxy_status)
+            proxy_cmd_list.append("exit")
+            
+            proxy_generated_commands = "\n".join(proxy_cmd_list)
+            all_generated_cmds_dict["proxy"] = proxy_generated_commands
+        else:
+            proxy_raw_section = "ファイル内に指定条件を満たす「プロキシ設定セクション（!\\nproxy-settings ～ timezone の直上）」が見つかりませんでした。"
+            proxy_generated_commands = "プロキシ設定がないため、コマンドは生成されませんでした。"
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 📧 SMTP設定の読込とコマンド自動作成（★不具合完全修正：destination行の欠落を完全に解決）
+        # --------------------------------------
+        st.subheader("📧 SMTP設定の精査と個別コマンド生成")
+        
+        smtp_raw_section = ""
+        smtp_generated_commands = ""
+        
+        # ★ 修正ポイント：テキスト全体から「smtpで始まる最初の行」から「最後に登場するdestinationで始まる行」までを完全にカバー
+        # [^\n]* で最後のdestination行全体を巻き込み、直後に続くインデントされた実データ行までを含めるため、最長一致で安全に抽出します。
+        smtp_block_match = re.search(r'(smtp\b[\s\S]*?destination\b[^\n]*)', string_data, re.IGNORECASE)
+
+        if smtp_block_match:
+            # 確実を期すため、マッチした位置以降で destination-addresses 階層が閉じる（または次の ! や空行）まで行単位でスキャン
+            start_pos = smtp_block_match.start()
+            rem_text = string_data[start_pos:]
+            rem_lines = rem_text.splitlines()
+            
+            smtp_block_lines = []
+            capture = True
+            found_dest_end = False
+            
+            for line in rem_lines:
+                line_stripped = line.strip()
+                line_lower = line_stripped.lower()
+                
+                # ブロックの終了条件：smtp設定から十分離れ、次のセクションの区切り（!）が来た場合
+                if found_dest_end and (line_stripped == "!" or (not line.startswith(" ") and line_stripped and not line_lower.startswith("smtp") and not line_lower.startswith("gateway") and not line_lower.startswith("from-address") and not line_lower.startswith("destination"))):
+                    break
+                    
+                smtp_block_lines.append(line)
+                
+                if line_lower.startswith("destination") or "destination" in line_lower:
+                    found_dest_end = True # destination関係の記述が始まったフラグ
+
+            # 抽出したブロックテキストを表示用に格納
+            smtp_raw_section = "\n".join(smtp_block_lines)
+            
+            smtp_cmd_list = []
+            has_destination_line = False
+            dest_addresses = []
+            
+            for line in smtp_block_lines:
+                line_stripped = line.strip()
+                line_lower = line_stripped.lower()
+                
+                if not line_stripped or line_stripped == "!":
+                    continue
+                
+                # 共通設定行のコマンド化
+                if line_lower.startswith("smtp"):
+                    cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
+                    smtp_cmd_list.append(cleaned)
+                    
+                elif line_lower.startswith("gateway"):
+                    cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
+                    smtp_cmd_list.append(cleaned)
+                    
+                elif line_lower.startswith("from-address"):
+                    cleaned = re.sub(r'\s+', ' ', line_stripped).strip()
+                    smtp_cmd_list.append(cleaned)
+                    
+                # destination行を発見した場合（インデント有無を問わず、本物の「destination 」で始まる行を抽出）
+                elif line_lower.startswith("destination "):
+                    has_destination_line = True
+                    addr_val = line_stripped[12:].strip()
+                    if addr_val and addr_val not in dest_addresses:
+                        dest_addresses.append(addr_val)
+
+            # ガード条件判定: destination行が存在していれば対応する全アドレスのコマンドを生成
+            if has_destination_line and dest_addresses:
+                for addr in dest_addresses:
+                    smtp_cmd_list.append(f"destination-addresses destination {addr}")
+                    smtp_cmd_list.append("exit")
+                
+            if smtp_cmd_list:
+                # 修正ポイント：destination行の数に応じてexitの数を調整
+                # 基本的なexit（smtp用、設定ブロック用）の2つに加え、
+                # destinationが存在する場合は、その数分だけ追加でexitを出力する
+                
+                # 1. 基本の終了コマンド
+                smtp_cmd_list.append("exit")
+                                             
+                # 2. destination-addresses が作成された行数分、さらにexitを追加する
+                for _ in dest_addresses:
+                    smtp_cmd_list.append("exit")
+                
+                
+                smtp_generated_commands = "\n".join(smtp_cmd_list)
+                all_generated_cmds_dict["smtp"] = smtp_generated_commands
+            else:
+                smtp_generated_commands = "SMTP設定の解析結果が空のため、コマンドは生成されませんでした。"
+        else:
+            smtp_raw_section = "ファイル内に「smtp」行から「destination」行に至るSMTP設定セクションが検出されませんでした。"
+            smtp_generated_commands = "SMTP設定がないため、コマンドは生成されませんでした。"
+            
+        col_smtp_box1, col_smtp_box2 = st.columns(2)
+        with col_smtp_box1:
+            show_custom_area("SMTP設定の内容の表示", smtp_raw_section, 250, "smtp_raw_detail", "smtp_source_detail.txt")
+        with col_smtp_box2:
+            show_custom_area("作成されたSMTPコマンド", smtp_generated_commands, 250, "smtp_gen_detail", "smtp_commands_detail.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🕒 タイムゾーン設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🕒 タイムゾーン設定の精査と個別コマンド生成")
+        
+        timezone_raw_section = ""
+        timezone_generated_commands = ""
+        
+        tz_found_lines = [l.strip() for l in base_cleaned_lines if l.strip().lower().startswith("timezone")]
+        
+        if tz_found_lines:
+            timezone_raw_section = "\n".join(tz_found_lines)
+            timezone_generated_commands = "\n".join(tz_found_lines)
+            all_generated_cmds_dict["tz"] = timezone_generated_commands
+        else:
+            timezone_raw_section = "ファイル内に条件を満たす「タイムゾーン設定行（timezone...）」が見つかりませんでした。"
+            timezone_generated_commands = "タイムゾーン設定がないため、コマンドは生成されませんでした。"
+                
+        col_tz1, col_tz2 = st.columns(2)
+        with col_tz1:
+            show_custom_area("タイムゾーン設定の内容の表示", timezone_raw_section, 180, "tz_raw", "timezone_source.txt")
+        with col_tz2:
+            show_custom_area("作成されたタイムゾーンコマンド", timezone_generated_commands, 180, "tz_gen", "timezone_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🔑 ライセンス更新設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🔑 ライセンス更新設定の精査と個別コマンド生成")
+        
+        licensing_raw_section = ""
+        licensing_generated_commands = ""
+        
+        lic_found_lines = []
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if l_stripped.lower().startswith("licensing"):
+                lic_found_lines.append(l_stripped)
+                if idx + 1 < len(base_cleaned_lines):
+                    next_l_stripped = base_cleaned_lines[idx + 1].strip()
+                    if next_l_stripped.lower().startswith("auto-update"):
+                        lic_found_lines.append(next_l_stripped)
+                break
+
+        if lic_found_lines:
+            licensing_raw_section = "\n".join(lic_found_lines)
+            has_true = any("true" in line.lower() for line in lic_found_lines if line.lower().startswith("auto-update"))
+            
+            if has_true:
+                licensing_generated_commands = "licensing auto-update true"
+            else:
+                licensing_generated_commands = "licensing auto-update false"
+            all_generated_cmds_dict["lic"] = licensing_generated_commands
+        else:
+            licensing_raw_section = "ファイル内に条件を満たす「ライセンス設定（licensing / auto-update）」が見つかりませんでした。"
+            licensing_generated_commands = "ライセンス設定がないため、コマンドは生成されませんでした。"
+            
+        col_lic1, col_lic2 = st.columns(2)
+        with col_lic1:
+            show_custom_area("ライセンス更新設定の内容の表示", licensing_raw_section, 180, "lic_raw", "licensing_source.txt")
+        with col_lic2:
+            show_custom_area("作成されたライセンス更新コマンド", licensing_generated_commands, 180, "lic_gen", "licensing_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🖥️ マシン情報更新設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🖥️ マシン情報更新設定の精査と個別コマンド生成")
+        
+        machine_info_raw_section = ""
+        machine_info_generated_commands = ""
+        
+        start_m_idx = -1
+        end_m_idx = -1
+        
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if start_m_idx == -1 and l_stripped.lower().startswith("appliance-name"):
+                start_m_idx = idx
+            if start_m_idx != -1 and l_stripped.lower().startswith("ip default-gateway"):
+                end_m_idx = idx
+                break
+
+        if start_m_idx != -1 and end_m_idx != -1:
+            extracted_machine_lines = [base_cleaned_lines[k].strip() for k in range(start_m_idx, end_m_idx + 1)]
+            machine_info_raw_section = "\n".join(extracted_machine_lines)
+            machine_info_generated_commands = "\n".join(extracted_machine_lines)
+            all_generated_cmds_dict["mach"] = machine_info_generated_commands
+        else:
+            machine_info_raw_section = "ファイル内に条件を満たす「マシン情報設定範囲（appliance-name ～ ip default-gateway）」が見つかりませんでした。"
+            machine_info_generated_commands = "マシン情報設定がないため、コマンドは生成されませんでした。"
+            
+        col_mach1, col_mach2 = st.columns(2)
+        with col_mach1:
+            show_custom_area("マシン情報更新設定の内容の表示", machine_info_raw_section, 220, "mach_raw", "machine_info_source.txt")
+        with col_mach2:
+            show_custom_area("作成されたマシン情報更新コマンド", machine_info_generated_commands, 220, "mach_gen", "machine_info_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # 🔌 NIC設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("🔌 NIC設定の精査と個別コマンド生成")
+        
+        nic_raw_section = ""
+        nic_generated_commands = ""
+        
+        start_nic_idx = -1
+        end_nic_idx = -1
+        
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if start_nic_idx == -1 and l_stripped.lower().startswith("interface 0:0"):
+                start_nic_idx = idx
+            if start_nic_idx != -1 and l_stripped.lower().startswith("authentication"):
+                for back_idx in range(idx - 1, start_nic_idx, -1):
+                    if base_cleaned_lines[back_idx].strip() == "!":
+                        end_nic_idx = back_idx
+                        break
+                if end_nic_idx != -1:
+                    break
+
+        if start_nic_idx != -1 and end_nic_idx != -1:
+            nic_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_nic_idx, end_nic_idx + 1)]
+            nic_raw_section = "\n".join(nic_extracted_lines)
+            
+            interfaces_blocks = []
+            current_block = []
+            
+            for line in nic_extracted_lines:
+                if line.lower().startswith("interface "):
+                    if current_block:
+                        interfaces_blocks.append(current_block)
+                    current_block = [line]
+                elif current_block:
+                    if line == "!":
+                        interfaces_blocks.append(current_block)
+                        current_block = []
+                    else:
+                        current_block.append(line)
+            if current_block:
+                interfaces_blocks.append(current_block)
+                
+            all_nic_cmds = []
+            
+            for block in interfaces_blocks:
+                if not block:
+                    continue
+                
+                if_line = block[0]
+                status_line = "disable"
+                dhcp_line = None
+                speed_val = "auto"
+                duplex_val = "auto"
+                mtu_line = None
+                vlan_line = None
+                ip_line = None
+                
+                for b_line in block[1:]:
+                    b_stripped = b_line.strip()
+                    b_lower = b_stripped.lower()
+                    
+                    if b_lower in ["enable", "disable"]:
+                        status_line = b_stripped
+                    elif b_lower.startswith("dhcp"):
+                        dhcp_line = b_stripped
+                    elif b_lower.startswith("speed "):
+                        speed_val = b_stripped.replace("speed", "").strip()
+                    elif b_lower.startswith("duplex "):
+                        duplex_val = b_stripped.replace("duplex", "").strip()
+                    elif b_lower.startswith("mtu-size"):
+                        mtu_line = b_stripped
+                    elif b_lower.startswith("vlan-trunking"):
+                        vlan_line = b_stripped
+                    elif b_lower.startswith("ip-address"):
+                        ip_line = b_stripped
+                
+                def clean_space(txt):
+                    return re.sub(r'\s+', ' ', txt).strip()
+                
+                cmd_block = []
+                cmd_block.append(clean_space(if_line))
+                cmd_block.append(clean_space(status_line))
+                
+                if dhcp_line:
+                    cmd_block.append(clean_space(dhcp_line))
+                    
+                raw_speed_duplex = f"speed {speed_val} duplex {duplex_val}"
+                cmd_block.append(clean_space(raw_speed_duplex))
+                
+                if mtu_line:
+                    cmd_block.append(clean_space(mtu_line))
+                if vlan_line:
+                    cmd_block.append(clean_space(vlan_line))
+                if ip_line:
+                    cmd_block.append(clean_space(ip_line))
+                    
+                cmd_block.append("exit")
+                
+                all_nic_cmds.append("\n".join(cmd_block))
+                
+            nic_generated_commands = "\n\n".join(all_nic_cmds)
+            all_generated_cmds_dict["nic"] = nic_generated_commands
+        else:
+            nic_raw_section = "ファイル内に条件を満たす「NIC設定範囲（interface 0:0 ～ authentication直上の !）」が見つかりませんでした。"
+            nic_generated_commands = "NIC設定がないため、コマンドは生成されませんでした。"
+            
+        col_nic1, col_nic2 = st.columns(2)
+        with col_nic1:
+            show_custom_area("NIC設定の内容の表示", nic_raw_section, 300, "nic_raw", "nic_info_source.txt")
+        with col_nic2:
+            show_custom_area("作成されたNICコマンド", nic_generated_commands, 300, "nic_gen", "nic_commands.txt")
+
+        st.markdown("---")
+
+        # --------------------------------------
+        # ⚙️ その他設定内容表示とコマンド自動作成
+        # --------------------------------------
+        st.subheader("⚙️ その他設定の精査と個別コマンド生成")
+        
+        other_raw_section = ""
+        other_generated_commands = ""
+        
+        start_other_idx = -1
+        end_other_idx = -1
+        
+        for idx, l in enumerate(base_cleaned_lines):
+            l_stripped = l.strip()
+            if start_other_idx == -1 and l_stripped.lower().startswith("authentication"):
+                start_other_idx = idx
+            if start_other_idx != -1 and l_stripped.lower().startswith("nacm groups group admin"):
+                end_other_idx = idx
+                break
+
+        if start_other_idx != -1 and end_other_idx != -1:
+            other_extracted_lines = [base_cleaned_lines[k].strip() for k in range(start_other_idx, end_other_idx + 1)]
+            other_raw_section = "\n".join(other_extracted_lines)
+            
+            other_cmd_lines = []
+            
+            for line in other_extracted_lines:
+                if line.lower().startswith("nacm groups group admin"):
+                    continue
+                if line.startswith("!"):
+                    continue
+                if line in ["service Management", "service SNMP", "service WebRouter"]:
+                    continue
+                
+                cleaned_line = re.sub(r'\s+', ' ', line).strip()
+                other_cmd_lines.append(cleaned_line)
+                
+            if other_cmd_lines:
+                other_generated_commands = "\n".join(other_cmd_lines)
+                all_generated_cmds_dict["other"] = other_generated_commands
+            else:
+                other_generated_commands = "追加コマンドは不要です。"
+        else:
+            other_raw_section = "ファイル内に条件を満たす「その他設定範囲（authentication ～ nacm groups group admin）」が見つかりませんでした。"
+            other_generated_commands = "その他設定がないため、コマンドは生成されませんでした。"
+            
+        col_oth1, col_oth2 = st.columns(2)
+        with col_oth1:
+            show_custom_area("その他設定の内容の表示", other_raw_section, 300, "other_other_raw", "other_info_source.txt")
+        with col_oth2:
+            show_custom_area("作成されたその他コマンド", other_generated_commands, 300, "other_gen", "other_commands.txt")
+
+
+# ==========================================
+# 2ページ目：SGOSファイルの整形
+# ==========================================
+with tab2:
+    st.header("SGOS設定ファイルの整形・依存関係補完")
+    
+    uploaded_sgos = st.file_uploader("SGOS設定ファイルを読み込んでください", type=["txt", "cfg"], key="sgos_upload")
+    
+    if uploaded_sgos is not None:
+        sgos_data = uploaded_sgos.getvalue().decode("utf-8")
+        
+        sgos_version = "未検出"
+        sgos_serial = "未検出"
+        
+        v_match = re.search(r'!-\s*Version:\s*(.*?)(?=\n|$)', sgos_data)
+        s_match = re.search(r'!-\s*Serial number:\s*(\d+)', sgos_data)
+        
+        if v_match:
+            sgos_version = v_match.group(1).replace("SGOS ", "").replace(" SWG Edition", "").strip()
+        if s_match:
+            sgos_serial = s_match.group(1).strip()
+            
+        st.subheader("📋 SGOS機器基本情報")
+        st.text(f"SGOSのバージョン:{sgos_version}\nシリアル番号:{sgos_serial}")
+        st.markdown("---")
+        
+        status_report = {
+            "edit format cifs ;mode": {"found": False, "insert": 'create format "cifs"'},
+            "edit format mapi ;mode": {"found": False, "insert": 'create format "mapi"'},
+            "edit log cifs ;mode": {"found": False, "insert": 'create log "cifs"'},
+            "edit log mapi ;mode": {"found": False, "insert": 'create log "mapi"'}
+        }
+        
+        sgos_lines = sgos_data.splitlines()
+        edited_sgos_lines = []
+        
+        for s_line in sgos_lines:
+            matched = False
+            for target_str, info in status_report.items():
+                if target_str in s_line:
+                    info["found"] = True
+                    edited_sgos_lines.append(info["insert"])
+                    edited_sgos_lines.append(s_line)
+                    matched = True
+                    break
+            if not matched:
+                edited_sgos_lines.append(s_line)
+                
+        edited_sgos_text = "\n".join(edited_sgos_lines)
+        
+        show_custom_area("整形・コマンド補完後の設定内容", edited_sgos_text, 400, "sgos_edited", "sgos_configured.txt")
+        
+        st.markdown("---")
+        st.subheader("📊 依存関係コマンドの挿入処理結果レポート")
+        
+        for target_str, info in status_report.items():
+            if info["found"]:
+                st.write(f"✅️ **「{target_str}」** が見つかったため、直前に **「{info['insert']}」** の挿入を実行しました。")
+            else:
+                st.write(f"❌ **「{target_str}」** は見つからなかったので、**「{info['insert']}」** の挿入を実行しませんでした。")
+
+
+# ==========================================
+# 3ページ目：作成コマンドの一括出力
+# ==========================================
+with tab3:
+    st.header("📋 作成されたコマンドの一括出力")
+    st.markdown("1ページ目で自動作成された各コマンド群を指定の順序で一つの枠に結合しています。")
+    
+    combined_ordered_list = []
+    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "nic", "acl", "other"]
+
+    for key in order_keys:
+    # 1ページ目で計算済みの文字列をそのまま使う
+     cmd_content = all_generated_cmds_dict[key].strip()
+    
+    # 既存のチェック（「コマンドは生成されませんでした」等を除外）
+    if cmd_content and "コマンドは生成されませんでした" not in cmd_content and "追加コマンドは不要です" not in cmd_content:
+       combined_ordered_list.append(cmd_content)
+            
+    final_combined_text = "\n\n".join(combined_ordered_list)
+    
+    if not final_combined_text.strip():
+        final_combined_text = "※まだ設定ファイルが読み込まれていないか、有効な作成コマンドはありません。"
+
+    show_custom_area(
+        label="一括統合コマンド枠 (コピー・一括保存用)", 
+        text_value=final_combined_text, 
+        height=550, 
+        unique_key="all_combined_cmds", 
+        download_filename="all_generated_commands.txt"
+    )
