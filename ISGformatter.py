@@ -651,9 +651,17 @@ with tab1:
                     smtp_cmd_list.append(f"destination-addresses {addr}")
                 
             if smtp_cmd_list:
+                # 修正ポイント：destination行の数に応じてexitの数を調整
+                # 基本的なexit（smtp用、設定ブロック用）の2つに加え、
+                # destinationが存在する場合は、その数分だけ追加でexitを出力する
+                
+                # 1. 基本の終了コマンド
                 smtp_cmd_list.append("exit")
                 smtp_cmd_list.append("exit")
-                smtp_cmd_list.append("exit")
+                
+                # 2. destination-addresses が作成された行数分、さらにexitを追加する
+                for _ in dest_addresses:
+                    smtp_cmd_list.append("exit")
                 
                 smtp_generated_commands = "\n".join(smtp_cmd_list)
                 all_generated_cmds_dict["smtp"] = smtp_generated_commands
