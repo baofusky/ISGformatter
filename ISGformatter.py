@@ -921,7 +921,9 @@ with tab1:
                     continue
                 if line.lower().startswith("gateway"):
                     continue
-		        if line.lower().startswith("acl\nenable"):
+		        if line.lower().startswith("acl"):
+                    continue
+				if line.lower().startswith("enable"):
                     continue
 		        if line.lower().startswith("rule"):
                     continue
