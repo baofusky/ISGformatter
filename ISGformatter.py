@@ -126,36 +126,44 @@ with tab1:
 
         st.markdown("---")
 
-        # --------------------------------------
+# --------------------------------------
         # 👤 ローカルユーザー設定の精査と表示
         # --------------------------------------
         st.subheader("👤 ローカルユーザー設定の抽出")
         
-        local_user_lines = []
+        local_user_list = []
         in_local_user_section = False
         
-        # ユーザー名リストの取得
+        # 正規表現パターン: "edit user " に続く最初の単語を抽出
+        # (サブコマンドである add や password を除外するため)
+        pattern = re.compile(r'^edit user\s+(\S+)')
+        
         for line in base_cleaned_lines:
             if line.startswith("edit local-user-list local-users"):
                 in_local_user_section = True
                 continue
             if in_local_user_section:
                 if line == "!":
-                    break
-                if line.startswith("edit user "):
-                    param = line.replace("edit user ", "").strip()
-                    if param and param != "admin": # admin以外を抽出
-                        local_user_lines.append(param)
+                    in_local_user_section = False # ブロック終了
+                    continue
+                
+                # パターンにマッチするか確認
+                match = pattern.match(line)
+                if match:
+                    user_name = match.group(1)
+                    # admin 以外のユーザー名かつ、まだリストにない場合のみ追加
+                    if user_name != "admin" and user_name not in local_user_list:
+                        local_user_list.append(user_name)
         
         # 抽出結果の表示
-        local_user_text = "\n".join(local_user_lines) if local_user_lines else "admin以外のローカルユーザーは検出されませんでした。"
+        local_user_text = "\n".join(local_user_list) if local_user_list else "admin以外のローカルユーザーは検出されませんでした。"
         show_custom_area("ローカルユーザー (admin以外)", local_user_text, 150, "local_users", "local_users.txt")
         
-        # 警告文（各ユーザー名に対して手動設定テンプレートを表示）
+        # 警告文
         st.warning("⚠️ **警告: ローカルユーザーはadmin以外、以下の方法で手動で追加する必要があります。**")
         
-        if local_user_lines:
-            for user in local_user_lines:
+        if local_user_list:
+            for user in local_user_list:
                 st.code(f"""
 localhost(config)# authentication
 localhost(config-authentication)# edit local-user-list local-users
@@ -169,7 +177,6 @@ localhost(config-local-user-list-local-users)# edit user {user} password
             st.info("追加設定が必要な対象ユーザーはいません。")
 
         st.markdown("---")
-
         
         # --------------------------------------
         # 3. SNMP設定の読込と動的コマンド再構築
