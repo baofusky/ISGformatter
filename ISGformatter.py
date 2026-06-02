@@ -931,7 +931,7 @@ with tab1:
                     continue
                 if line.lower().startswith("add"):
                     continue
-                if line.lower().startswith("admin-realm localRealm"):
+                if line.lower().startswith("admin-realm"):
                     continue
                 if line.lower().startswith("edit realm"):
                     continue 
