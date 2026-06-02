@@ -925,6 +925,16 @@ with tab1:
                     continue
                 if line.lower().startswith("destination"):
                     continue 
+                if line.lower().startswith("edit user"):
+                    continue
+                if line.lower().startswith("edit local-user-list"):
+                    continue
+                if line.lower().startswith("add"):
+                    continue
+                if line.lower().startswith("local-user-list local-users"):
+                    continue
+                if line.lower().startswith("edit realm"):
+                    continue 
                 if line.lower().startswith("destination-addresses"):
                     continue 
                 if line.startswith("!"):
@@ -1019,7 +1029,7 @@ with tab2:
 with tab3:
     st.header("📋 作成されたコマンドの一括出力")
     st.markdown("1ページ目で自動生成された各コマンドを結合して表示します。NIC設定は最後に配置されます。")
-    
+     
     combined_ordered_list = []
     # NICを最後（otherの後）に移動
     order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "acl", "other", "nic"]
