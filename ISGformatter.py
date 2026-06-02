@@ -181,6 +181,33 @@ localhost(config-local-user-list-local-users)# edit user {user} password
 
         st.markdown("---")
         
+# --------------------------------------
+        # 🌐 ネットワーク情報設定の抽出
+        # --------------------------------------
+        st.subheader("🌐 ネットワーク情報設定")
+        
+        network_info_lines = []
+        start_index = -1
+        
+        # 1. "dns name-server" で始まる行を探す
+        for i, line in enumerate(base_cleaned_lines):
+            if line.strip().startswith("dns name-server"):
+                start_index = i
+                break
+        
+        # 2. 見つかった場合、そこから12行を取得
+        if start_index != -1:
+            network_info_lines = base_cleaned_lines[start_index : start_index + 12]
+        
+        # 抽出結果の表示
+        if network_info_lines:
+            network_info_text = "\n".join(network_info_lines)
+            show_custom_area("DNS/ネットワーク設定 (12行)", network_info_text, 250, "network_info", "network_info.txt")
+        else:
+            st.info("ネットワーク情報（dns name-serverから始まる設定）は見つかりませんでした。")
+
+        st.markdown("---")        
+        
         # --------------------------------------
         # 3. SNMP設定の読込と動的コマンド再構築
         # --------------------------------------
