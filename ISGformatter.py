@@ -936,6 +936,8 @@ with tab1:
                     continue 
                 if line.lower().startswith("destination-addresses"):
                     continue 
+                if line.lower().startswith("local-user-list local-users"):
+                    continue 
                 if line.startswith("!"):
                     continue
                 if line in ["service Management", "service SNMP", "service WebRouter"]:
