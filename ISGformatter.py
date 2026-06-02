@@ -126,60 +126,6 @@ with tab1:
 
         st.markdown("---")
 
-　　　　# --------------------------------------
-        # 👤 ローカルユーザー設定の精査と表示
-        # --------------------------------------
-        st.subheader("👤 ローカルユーザー設定の抽出")
-        
-        local_user_list = []
-        in_local_user_section = False
-        
-        # 正規表現パターン: "edit user " に続く最初の単語を抽出
-        pattern = re.compile(r'^edit user\s+(\S+)')
-        
-        for line in base_cleaned_lines:
-            line_stripped = line.strip()
-            
-            # 開始条件: reset-interval で始まる行
-            if line_stripped.startswith("reset-interval"):
-                in_local_user_section = True
-            
-            # 終了条件: edit realm localRealm に到達した時点（含む直前まで）
-            if in_local_user_section and line_stripped.startswith("edit realm localRealm"):
-                break
-                
-            if in_local_user_section:
-                # パターンにマッチするか確認
-                match = pattern.match(line_stripped)
-                if match:
-                    user_name = match.group(1)
-                    # admin 以外のユーザー名かつ、リストになければ追加
-                    if user_name != "admin" and user_name not in local_user_list:
-                        local_user_list.append(user_name)
-        
-        # 抽出結果の表示
-        local_user_text = "\n".join(local_user_list) if local_user_list else "対象ユーザーは検出されませんでした。"
-        show_custom_area("抽出されたローカルユーザー (admin以外)", local_user_text, 150, "local_users", "local_users.txt")
-        
-        # 警告文
-        st.warning("⚠️ **警告: ローカルユーザーはadmin以外、以下の方法で手動で追加する必要があります。**")
-        
-        if local_user_list:
-            # 抽出された全ユーザー分をまとめて警告文としてループ出力
-            for user in local_user_list:
-                st.code(f"""
-localhost(config)# authentication
-localhost(config-authentication)# edit local-user-list local-users
-localhost(config-local-user-list-local-users)# create user
-Value for 'name' (<string>): {user}
-  ok
-localhost(config-local-user-list-local-users)# edit user {user} add admin
-localhost(config-local-user-list-local-users)# edit user {user} password
-                """, language="text")
-        else:
-            st.info("追加設定が必要な対象ユーザーはいません。")
-
-        st.markdown("---")
         
         # --------------------------------------
         # 3. SNMP設定の読込と動的コマンド再構築
