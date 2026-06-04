@@ -1193,24 +1193,46 @@ with tab4:
         st.markdown(f"判定: :{'green' if is_ok2 else 'red'}[{'OK' if is_ok2 else 'NG'}]")
         show_custom_area("抽出内容", found_line, 70, "c2", "c2.txt")
 
-    # --- チェック項目3: Current State ---
+# --- チェック項目3: Current State 確認 ---
     if up_sys_pre:
-        st.subheader("✅ チェック項目3: Current State確認")
-        skip_w = ["Overall Health", "Base License Expiration", "Health Check Status", 
-                  "Content Filter Communication Status", "SSL Proxy License Exporation", 
-                  "License Server Communication Status", "Application Classification Communication Status"]
+        st.subheader("✅ チェック項目3: Current State 確認")
         
-        states = []
-        is_ok3 = True
-        for i, l in enumerate(sys_p):
-            if "Current State" in l:
-                prev = sys_p[i-1] if i > 0 else ""
-                states.append(f"Header: {prev}\nData: {l}")
-                if not any(w in prev for w in skip_w): is_ok3 = False
+        # スキップ判定用のキーワード
+        skip_w = [
+            "Overall Health", 
+            "Base License Expiration", 
+            "Health Check Status", 
+            "Content Filter Communication Status", 
+            "SSL Proxy License Exporation", 
+            "License Server Communication Status", 
+            "Application Classification Communication Status"
+        ]
         
+        results_c3 = [] # 個別の判定結果を格納
+        extracted_data = [] # 表示用の抽出データ
+        
+        for i, line in enumerate(sys_p):
+            if "Current State" in line:
+                prev_line = sys_p[i-1] if i > 0 else ""
+                extracted_data.append(f"Header: {prev_line.strip()}\nData: {line.strip()}")
+                
+                # スキップ判定
+                if any(w in prev_line for w in skip_w):
+                    continue # スキップ対象は判定に含めない
+                
+                # スキップ対象外の判定（"Current State                 : OK" と一致するか）
+                # ※正規表現で空白の揺らぎを許容しつつチェック
+                if re.search(r'Current State\s*:\s*OK', line):
+                    results_c3.append(True)
+                else:
+                    results_c3.append(False)
+
+        # 最終判定：スキップ対象外が全てOKならTrue
+        is_ok3 = all(results_c3) if results_c3 else True
         results.append(is_ok3)
+        
         st.markdown(f"判定: :{'green' if is_ok3 else 'red'}[{'OK' if is_ok3 else 'NG'}]")
-        show_custom_area("抽出内容", "\n\n".join(states), 200, "c3", "c3.txt")
+        show_custom_area("抽出されたCurrent Stateリスト", "\n\n".join(extracted_data), 200, "c3", "c3.txt")
 
     # --- チェック項目4/5: CPU/Memory ---
     for title, key_str, res_list in [("CPU", "system:cpu-usage~hourly", []), ("メモリ", "system:memory-usage~hourly", [])]:
