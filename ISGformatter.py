@@ -50,9 +50,7 @@ if uploaded_file:
         # 5. 以降のコマンド整形・自動生成処理
         st.divider()
         st.subheader("⚙️ コマンド自動生成・整形処理")
-        st.write("アップロードされたファイルを使用してコマンドを自動生成します。")
-        # ここに file_content を使用した具体的な整形ロジックを追記してください
-        st.code("# 生成されたコマンドがここに表示されます", language="bash")
+
         
     else:
         st.error("アップロードされたファイルから 'versionNumber' を特定できませんでした。")
