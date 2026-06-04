@@ -1139,7 +1139,7 @@ with tab3:
         st.warning("表示するコマンドがありません。")
 
 # ==========================================
-# 4ページ目：SGOS情報確認
+# 4ページ目：SGOS情報確認（完全版）
 # ==========================================
 with tab4:
     st.header("🔍 SGOS 情報確認")
@@ -1159,35 +1159,36 @@ with tab4:
 
     st.markdown("---")
 
-    results = [] # 全体判定用リスト
+    # 判定結果を格納するリスト
+    results = []
 
-    # --- キッティング前の確認 ---
-    if up_sys_cust and up_sys_pre:
-        st.subheader("✅ キッティング前の確認")
-        sys_c = up_sys_cust.getvalue().decode().splitlines()
+    # ==========================================
+    # キッティング前ファイルの処理ブロック
+    # ==========================================
+    if up_sys_pre:
+        # ここで sys_p を定義
         sys_p = up_sys_pre.getvalue().decode().splitlines()
 
-        def get_info(lines):
-            info = {"serial": "", "ram": "", "cores": ""}
-            for l in lines:
-                if "Serial Number is" in l:
-                    match = re.search(r'Serial Number is\s*(.*)', l, re.IGNORECASE)
-                    if match: info["serial"] = match.group(1).strip()
-                if "RAM:" in l: info["ram"] = l.strip()
-                if "Number of cores:" in l: info["cores"] = l.strip()
-            return info
+        # --- 項目1: ハードウェア情報比較 ---
+        if up_sys_cust:
+            sys_c = up_sys_cust.getvalue().decode().splitlines()
+            def get_info(lines):
+                info = {"serial": "", "ram": "", "cores": ""}
+                for l in lines:
+                    if "Serial Number is" in l:
+                        m = re.search(r'Serial Number is\s*(.*)', l, re.IGNORECASE)
+                        if m: info["serial"] = m.group(1).strip()
+                    if "RAM:" in l: info["ram"] = l.strip()
+                    if "Number of cores:" in l: info["cores"] = l.strip()
+                return info
+            c_info, p_info = get_info(sys_c), get_info(sys_p)
+            is_match = (c_info == p_info)
+            results.append(is_match)
+            st.subheader("✅ キッティング前の確認")
+            st.markdown(f"判定: :{'green' if is_match else 'red'}[{'OK' if is_match else 'NG'}]")
+            show_custom_area("詳細比較", f"お客様:\n{c_info}\n\nキッティング前:\n{p_info}", 150, "c1", "c1.txt")
 
-        c_info, p_info = get_info(sys_c), get_info(sys_p)
-        is_match = (c_info == p_info)
-        results.append(is_match)
-        
-        col1, col2 = st.columns([1, 4])
-        col1.markdown(f"### :{'green' if is_match else 'red'}[{'OK' if is_match else 'NG'}]")
-        col2.write("ハードウェア情報の一致確認")
-        show_custom_area("詳細比較", f"お客様:\n{c_info}\n\nキッティング前:\n{p_info}", 150, "c1", "c1.txt")
-
-    # --- チェック項目2: Storage ---
-    if up_sys_pre:
+        # --- 項目2: Storage ---
         st.subheader("✅ チェック項目2: Storage情報")
         target = "Storage100.5.5.1     00000000:00000000"
         found_line = next((l for l in sys_p if "Storage100.5.5.1" in l), "")
@@ -1196,42 +1197,37 @@ with tab4:
         st.markdown(f"判定: :{'green' if is_ok2 else 'red'}[{'OK' if is_ok2 else 'NG'}]")
         show_custom_area("抽出内容", found_line if found_line else "該当なし", 70, "c2", "c2.txt")
 
-    # --- チェック項目3: Current State (新ロジック) ---
-    if up_sys_pre:
+        # --- 項目3: Current State ---
         st.subheader("✅ チェック項目3: Current State確認")
         skip_w = ["Overall Health", "Base License Expiration", "Health Check Status", 
                   "Content Filter Communication Status", "SSL Proxy License Exporation", 
                   "License Server Communication Status", "Application Classification Communication Status"]
-        
-        results_c3 = []
-        extracted_data = []
+        results_c3, extracted_data = [], []
         for i, l in enumerate(sys_p):
             if "Current State" in l:
                 prev = sys_p[i-1] if i > 0 else ""
                 extracted_data.append(f"Header: {prev.strip()}\nData: {l.strip()}")
                 if not any(w in prev for w in skip_w):
                     results_c3.append(bool(re.search(r'Current State\s*:\s*OK', l)))
-        
         is_ok3 = all(results_c3) if results_c3 else True
         results.append(is_ok3)
         st.markdown(f"判定: :{'green' if is_ok3 else 'red'}[{'OK' if is_ok3 else 'NG'}]")
-        show_custom_area("抽出されたCurrent State", "\n\n".join(extracted_data), 200, "c3", "c3.txt")
+        show_custom_area("抽出内容", "\n\n".join(extracted_data), 200, "c3", "c3.txt")
 
-    # --- チェック項目4/5: CPU/Memory ---
-    for title, key_str in [("CPU", "system:cpu-usage~hourly"), ("メモリ", "system:memory-usage~hourly")]:
-        st.subheader(f"✅ {title}使用率確認")
-        lines = [l for l in sys_p if key_str in l]
-        vals = []
-        for l in lines:
-            m = re.search(r'\(60, 60\):\s*(.*)', l)
-            if m: vals.extend([int(n) for n in re.findall(r'\d+', m.group(1))])
-        
-        is_ok = all(v <= 50 for v in vals) if vals else True
-        results.append(is_ok)
-        st.markdown(f"判定: :{'green' if is_ok else 'red'}[{'OK' if is_ok else 'NG'}]")
-        show_custom_area("抽出数値", str(vals), 100, f"c{title}", f"{title}.txt")
+        # --- 項目4/5: CPU/Memory (sys_p を利用する処理はここに入れる) ---
+        for title, key_str in [("CPU", "system:cpu-usage~hourly"), ("メモリ", "system:memory-usage~hourly")]:
+            st.subheader(f"✅ {title}使用率確認")
+            lines = [l for l in sys_p if key_str in l]
+            vals = []
+            for l in lines:
+                m = re.search(r'\(60, 60\):\s*(.*)', l)
+                if m: vals.extend([int(n) for n in re.findall(r'\d+', m.group(1))])
+            is_ok = all(v <= 50 for v in vals) if vals else True
+            results.append(is_ok)
+            st.markdown(f"判定: :{'green' if is_ok else 'red'}[{'OK' if is_ok else 'NG'}]")
+            show_custom_area("抽出数値", str(vals), 100, f"c{title}", f"{title}.txt")
 
-    # --- チェック項目6: Eventログ ---
+    # --- チェック項目6: Eventログ (if up_ev_pre の中) ---
     if up_ev_pre:
         st.subheader("✅ チェック項目6: イベントログエラー確認")
         errs = ["read error has occurred", "arning, a write episoded", "PSU no input"]
@@ -1245,10 +1241,8 @@ with tab4:
     # --- 全体判定 ---
     if len(results) >= 6:
         st.markdown("---")
-        if all(results):
-            st.success("### ✅ 全体判定：OK")
-        else:
-            st.error("### ❌ 全体判定：NG")
+        if all(results): st.success("### ✅ 全体判定：OK")
+        else: st.error("### ❌ 全体判定：NG")
 
     # --- コンテンツフィルタ & 後確認 ---
     if up_conf_cust:
@@ -1264,5 +1258,4 @@ with tab4:
         if diff:
             st.error("不一致あり")
             show_custom_area("不一致箇所", "\n".join(list(diff)), 300, "diff", "diff.txt")
-        else:
-            st.success("一致しています")
+        else: st.success("一致しています")
