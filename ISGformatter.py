@@ -7,25 +7,25 @@ st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wid
 
 st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
+import streamlit as st
+import re
+import json
+
+# ページ設定
+st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
+st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
+
+# 共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
     st.markdown(f"**{label}**")
     title_col, dl_col = st.columns([3, 1.2])
     with title_col:
-        st.caption("💡 枠内の右上に表示されるボタンからクリップボードにコピーできます。")
+        st.caption("💡 右上のボタンからダウンロードできます。")
     with dl_col:
-        is_disabled = not text_value.strip() or "は見つかりませんでした" in text_value
-        st.download_button(
-            label="📥 utf8TXTダウンロード",
-            data=text_value.encode("utf-8"),
-            file_name=download_filename,
-            mime="text/plain",
-            key=f"btn_dl_{unique_key}",
-            disabled=is_disabled,
-            use_container_width=True
-        )
+        st.download_button("📥 ダウンロード", data=text_value.encode("utf-8"), file_name=download_filename, key=f"btn_dl_{unique_key}", use_container_width=True)
     st.code(text_value, language="text")
 
-# 🔗 バージョン情報の定義
+# 🔗 バージョンデータ定義
 VERSION_DATA = {
     "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "link": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
     "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "link": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
@@ -36,6 +36,38 @@ VERSION_DATA = {
     "2.5.4.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"], "down": ["any hight version of 2.5"], "link": {"2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"}},
     "2.5.5.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"], "down": ["any hight version of 2.5"], "link": {"2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}},
 }
+
+# 1ページ目のメイン処理
+uploaded_file = st.file_uploader("ISG設定ファイルをアップロード", type=["json", "txt"])
+
+if uploaded_file:
+    content = uploaded_file.getvalue().decode("utf-8")
+    # "versionNumber": "x.x.x.x" を抽出
+    match = re.search(r'"versionNumber":\s*"([\d\.]+)"', content)
+    
+    if match:
+        extracted_ver = match.group(1)
+        st.success(f"ファイルからバージョン {extracted_ver} を検出しました。")
+        
+        if extracted_ver in VERSION_DATA:
+            data = VERSION_DATA[extracted_ver]
+            
+            st.subheader(f"ISGバージョン: {extracted_ver}")
+            c1, c2 = st.columns(2)
+            with c1:
+                st.info(f"**Upgrade Path**\n" + "\n".join(data["up"]))
+            with c2:
+                st.warning(f"**Downgrade Path**\n" + "\n".join(data["down"]))
+            
+            # Upgrade Pathのリンク一覧表示
+            st.write("#### 関連リンク (Upgrade Path対象)")
+            for up_ver in data["up"]:
+                if up_ver in data["link"]:
+                    st.write(f"- {up_ver}: [リンク]({data['link'][up_ver]})")
+        else:
+            st.warning(f"バージョン {extracted_ver} は定義されていません。")
+    else:
+        st.error("ファイルから 'versionNumber' を抽出できませんでした。")
 
 # 1ページ目のメイン処理
 st.header("ISGOS バージョン解析")
