@@ -50,7 +50,7 @@ if uploaded_file:
                     st.write(f"- **{up_ver}**: [ダウンロードリンク]({data['links'][up_ver]})")
         else:
             # 💡 バージョンが辞書にない場合の表示
-            st.error(f"バージョン {version} は特別ですので、古すぎるか新しすぎるかです。お手数ですが、別途相談してください。")
+            st.error(f"バージョン {version} は特別ですので、古すぎるか新しすぎるかです。ファームウェアの入手方法について、お手数ですが、別途相談してください。")
         
         st.divider()
         st.subheader("⚙️ コマンド自動生成・整形処理")
