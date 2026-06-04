@@ -1168,11 +1168,23 @@ with tab4:
         sys_p = up_sys_pre.getvalue().decode().splitlines()
 
         def get_info(lines):
-            return {
-                "serial": [l for l in lines if "Serial Number is" in l],
-                "ram": [l for l in lines if "RAM:" in l],
-                "cores": [l for l in lines if "Number of cores:" in l]
-            }
+            info = {"serial": "", "ram": "", "cores": ""}
+            for l in lines:
+                # Serial Number is の後ろの文字列（数字や英数字）を抽出
+                if "Serial Number is" in l:
+                    # "Serial Number is" より後ろの文字を取得し、余計な空白を除去
+                    match = re.search(r'Serial Number is\s*(.*)', l, re.IGNORECASE)
+                    if match:
+                        info["serial"] = match.group(1).strip()
+                
+                # RAM: で始まる行の内容
+                if "RAM:" in l:
+                    info["ram"] = l.strip()
+                
+                # Number of cores: で始まる行の内容
+                if "Number of cores:" in l:
+                    info["cores"] = l.strip()
+            return info
 
         c_info, p_info = get_info(sys_c), get_info(sys_p)
         is_match = (c_info == p_info)
