@@ -1165,25 +1165,28 @@ with tab4:
     if up_sys_pre:
         sys_p = up_sys_pre.getvalue().decode().splitlines()
 
-        # --- 項目1: ハードウェア情報比較 ---
+        # --- 項目1: ハードウェア情報比較 (行そのものを比較) ---
         if up_sys_cust:
             sys_c = up_sys_cust.getvalue().decode().splitlines()
-            def get_info(lines):
+            
+            def get_raw_lines(lines):
+                # "Serial number is" で始まる行、RAM行、Cores行をそのまま抽出
                 info = {"serial": "", "ram": "", "cores": ""}
                 for l in lines:
-                    if "Serial number is" in l.lower():
-                        match = re.search(r'Serial number is\s*(\S+)', l, re.IGNORECASE)
-                        if match: info["serial"] = match.group(1).strip()
-                    if "RAM:" in l: info["ram"] = l.strip()
-                    if "Number of cores:" in l: info["cores"] = l.strip()
+                    if "serial number is" in l.lower():
+                        info["serial"] = l.strip()
+                    if "RAM:" in l:
+                        info["ram"] = l.strip()
+                    if "Number of cores:" in l:
+                        info["cores"] = l.strip()
                 return info
             
-            c_info, p_info = get_info(sys_c), get_info(sys_p)
+            c_info, p_info = get_raw_lines(sys_c), get_raw_lines(sys_p)
             is_match = (c_info == p_info)
             results.append(is_match)
             st.subheader("✅ キッティング前の確認")
             st.markdown(f"ハードウェア情報判定: :{'green' if is_match else 'red'}[{'OK' if is_match else 'NG'}]")
-            show_custom_area("詳細比較", f"お客様:\n{c_info}\n\nキッティング前:\n{p_info}", 150, "c1", "c1.txt")
+            show_custom_area("詳細比較 (行単位)", f"お客様:\n{c_info}\n\nキッティング前:\n{p_info}", 150, "c1", "c1.txt")
 
         # --- 項目2: Storage ---
         st.subheader("✅ チェック項目2: Storage情報")
@@ -1194,7 +1197,7 @@ with tab4:
         st.markdown(f"判定: :{'green' if is_ok2 else 'red'}[{'OK' if is_ok2 else 'NG'}]")
         show_custom_area("抽出内容", found_line if found_line else "該当なし", 70, "c2", "c2.txt")
 
-        # --- 項目3: Current State (新ロジック) ---
+        # --- 項目3: Current State ---
         st.subheader("✅ チェック項目3: Current State確認")
         skip_w = ["Overall Health", "Base License Expiration", "Health Check Status", 
                   "Content Filter Communication Status", "SSL Proxy License Exporation", 
@@ -1206,9 +1209,10 @@ with tab4:
                 prev = sys_p[i-1] if i > 0 else ""
                 extracted_data.append(f"Header: {prev.strip()}\nData: {l.strip()}")
                 
-                # スキップ対象外のみ判定
+                # スキップ対象外のみ判定（"Current State : OK" と完全に一致するか）
                 if not any(w in prev for w in skip_w):
-                    results_c3.append(bool(re.search(r'Current State\s*:\s*OK', l)))
+                    # 前方一致等を考慮し、Current State : OK が含まれているか確認
+                    results_c3.append("Current State" in l and ": OK" in l)
         
         is_ok3 = all(results_c3) if results_c3 else True
         results.append(is_ok3)
