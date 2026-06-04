@@ -13,7 +13,6 @@ import json
 
 # ページ設定
 st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
-st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
 # 共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
