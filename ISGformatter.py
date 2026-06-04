@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import json
+
 # ページ設定
 st.set_page_config(page_title="ISG 構成・整形ツール", layout="wide")
 st.title("ISG 設定ファイル 解析・生成ツール")
@@ -21,39 +22,41 @@ VERSION_DATA = {
 uploaded_file = st.file_uploader("ISG設定ファイルをアップロードしてください", type=["json", "txt"])
 
 if uploaded_file:
-    # 1. ファイル内容の抽出
     file_content = uploaded_file.getvalue().decode("utf-8")
     
-    # 2. バージョン番号の抽出
-    match = re.search(r'"versionNumber":\s*"([\d\.]+)"', file_content)
-    
-    if match:
-        version = match.group(1)
+    # バージョン抽出
+    try:
+        data_json = json.loads(file_content)
+        version = data_json.get("versionNumber", "不明")
+    except json.JSONDecodeError:
+        match = re.search(r'"versionNumber":\s*"([\d\.]+)"', file_content)
+        version = match.group(1) if match else "不明"
+
+    if version != "不明":
         st.success(f"解析対象バージョン: {version}")
         
-        # 3. アップグレード・ダウングレード情報の表示
+        # 判定と表示
         if version in VERSION_DATA:
             data = VERSION_DATA[version]
-            
             col1, col2 = st.columns(2)
             with col1:
                 st.info(f"**Upgrade Path**\n" + "\n".join([f"- {v}" for v in data["up"]]))
             with col2:
                 st.warning(f"**Downgrade Path**\n" + "\n".join([f"- {v}" for v in data["down"]]))
             
-            # 4. 関連リンクの表示
             st.write("#### 関連リンク (Upgrade Path対象)")
             for up_ver in data["up"]:
                 if up_ver in data["links"]:
                     st.write(f"- **{up_ver}**: [ダウンロードリンク]({data['links'][up_ver]})")
+        else:
+            # 💡 バージョンが辞書にない場合の表示
+            st.error(f"バージョン {version} は特別ですので、古すぎるか新しすぎるかです。お手数ですが、別途相談してください。")
         
-        # 5. 以降のコマンド整形・自動生成処理
         st.divider()
         st.subheader("⚙️ コマンド自動生成・整形処理")
-
-        
+        st.code("# 生成されたコマンドがここに表示されます", language="bash")
     else:
-        st.error("アップロードされたファイルから 'versionNumber' を特定できませんでした。")
+        st.error("ファイルから 'versionNumber' を特定できませんでした。")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
