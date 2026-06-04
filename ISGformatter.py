@@ -53,8 +53,7 @@ if uploaded_file:
             st.error(f"バージョン {version} は特別ですので、古すぎるか新しすぎるかです。ファームウェアの入手方法について、お手数ですが、別途相談してください。")
         
         st.divider()
-        st.subheader("⚙️ コマンド自動生成・整形処理")
-        st.code("# 生成されたコマンドがここに表示されます", language="bash")
+
     else:
         st.error("ファイルから 'versionNumber' を特定できませんでした。")
 
