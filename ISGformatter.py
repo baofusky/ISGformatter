@@ -1137,64 +1137,76 @@ with tab3:
         show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
     else:
         st.warning("表示するコマンドがありません。")
-    # ==========================================
-# 4ページ目：SGOS情報確認
+# ==========================================
+# 4ページ目：SGOS情報確認（詳細表示付き）
 # ==========================================
 with tab4:
     st.header("🔍 SGOS 情報確認")
 
-    # --- 1. ファイルアップロードエリア ---
+    # 1. ファイルアップロードエリア
     st.subheader("📁 ファイルアップロード")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.write("お客様提供情報")
-        up_sys_cust = st.file_uploader("SG_sysinfo", key="sys_cust")
-        up_conf_cust = st.file_uploader("SG_config", key="conf_cust")
-    with col2:
-        st.write("キッティング前")
-        up_sys_pre = st.file_uploader("SG_sysinfo", key="sys_pre")
-        up_ev_pre = st.file_uploader("SG_event", key="ev_pre")
-    with col3:
-        st.write("キッティング後")
-        up_sys_post = st.file_uploader("SG_sysinfo", key="sys_post")
-        up_conf_post = st.file_uploader("SG_config", key="conf_post")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        up_sys_cust = st.file_uploader("お客様: SG_sysinfo", key="sys_cust")
+        up_conf_cust = st.file_uploader("お客様: SG_config", key="conf_cust")
+    with c2:
+        up_sys_pre = st.file_uploader("キッティング前: SG_sysinfo", key="sys_pre")
+        up_ev_pre = st.file_uploader("キッティング前: SG_event", key="ev_pre")
+    with c3:
+        up_sys_post = st.file_uploader("キッティング後: SG_sysinfo", key="sys_post")
+        up_conf_post = st.file_uploader("キッティング後: SG_config", key="conf_post")
 
-    # --- キッティング前の確認処理 ---
     st.markdown("---")
+    
+    # 2. キッティング前の確認処理
     st.subheader("✅ キッティング前の確認")
-
     if up_sys_cust and up_sys_pre:
-        # 比較処理用ロジック（簡易版）
-        def get_sysinfo_data(file_content):
-            # 行ごとに解析し必要な情報を抽出する関数
-            return {"serial": "...", "ram": "...", "cores": "..."} # 実際の実装を入れる
+        cust_data = up_sys_cust.getvalue().decode().splitlines()
+        pre_data = up_sys_pre.getvalue().decode().splitlines()
 
-        data_cust = get_sysinfo_data(up_sys_cust.getvalue().decode())
-        data_pre = get_sysinfo_data(up_sys_pre.getvalue().decode())
+        # 抽出ロジック（簡易例）
+        def extract_info(lines):
+            info = {"Serial": "", "RAM": "", "Cores": ""}
+            for l in lines:
+                if "Serial Number is" in l: info["Serial"] = l
+                if "RAM:" in l: info["RAM"] = l
+                if "Number of cores:" in l: info["Cores"] = l
+            return info
 
-        # チェック項目1
-        col_c1, col_c2 = st.columns([1, 4])
-        is_match = (data_cust == data_pre) # 比較ロジック
-        status_color = "green" if is_match else "red"
-        col_c1.markdown(f":{status_color}[{'OK' if is_match else 'NG'}]")
-        col_c2.write("ハードウェア基本情報の一致確認")
+        cust_info = extract_info(cust_data)
+        pre_info = extract_info(pre_data)
+
+        # 比較結果と詳細表示
+        col_res, col_detail = st.columns([1, 3])
         
-        # チェック項目2～5（同様のロジックで実装）
-        # ... (Storage100.5.5.1抽出, Current State確認, CPU/Memory使用率確認)
+        # 比較ロジック
+        is_ok = (cust_info == pre_info)
+        color = "green" if is_ok else "red"
+        
+        col_res.markdown(f"### :{color}[{'OK' if is_ok else 'NG'}]")
+        with col_detail:
+            st.markdown("**詳細比較内容:**")
+            diff_text = f"お客様側:\n{cust_info}\n\nキッティング前:\n{pre_info}"
+            st.code(diff_text, language="text")
 
-    # --- キッティング後の比較 ---
-    st.markdown("---")
-    st.subheader("🔧 キッティング後の比較")
-    if up_conf_cust and up_conf_post:
-        # コンフィグ比較処理
-        # 不一致があれば表示
-        st.warning("不一致箇所を表示します...")
-    else:
-        st.info("キッティング後のSG_configファイルをアップロードすると比較が実行されます。")
-
-    # --- コンテンツフィルタ設定表示 ---
+    # 3. コンテンツフィルタ設定表示
     if up_conf_cust:
-        st.markdown("---")
         st.subheader("🛡️ コンテンツフィルタ設定")
-        # reで指定範囲抽出して表示
-        # re.search(r'!- BEGIN content_filtering(.*?)!- END content_filtering', text, re.DOTALL)
+        conf_text = up_conf_cust.getvalue().decode()
+        match = re.search(r'!- BEGIN content_filtering(.*?)!- END content_filtering', conf_text, re.DOTALL)
+        if match:
+            show_custom_area("コンテンツフィルタ設定内容", match.group(0), 200, "cf_config", "cf_config.txt")
+
+    # 4. キッティング後の比較
+    if up_conf_cust and up_conf_post:
+        st.subheader("🔧 キッティング後の比較")
+        # 簡易的な差分抽出
+        cust_lines = set(up_conf_cust.getvalue().decode().splitlines())
+        post_lines = set(up_conf_post.getvalue().decode().splitlines())
+        diff = cust_lines ^ post_lines # 対称差分
+        
+        if diff:
+            st.error("以下の不一致が検出されました:")
+            st.code("\n".join(list(diff)[:20]), language="text") # 抜粋表示
+        else:
+            st.success("Configに不一致はありませんでした。")
