@@ -1,12 +1,11 @@
 import streamlit as st
 import re
-import json
 
 # ページ設定
 st.set_page_config(page_title="ISG 構成・整形ツール", layout="wide")
-st.title("ISG 設定ファイル 解析ツール")
+st.title("ISG 設定ファイル 解析・生成ツール")
 
-# 🔗 バージョンデータ定義（Upgrade Pathの全リンクを網羅）
+# 🔗 バージョンデータ定義
 VERSION_DATA = {
     "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "links": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
     "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "links": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
@@ -18,41 +17,45 @@ VERSION_DATA = {
     "2.5.5.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0", "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}},
 }
 
-# 統合されたファイルアップロードボタン
-uploaded_file = st.file_uploader("設定ファイルを一つアップロードしてください", type=["json", "txt"])
+# 共通UI: ファイルアップロード
+uploaded_file = st.file_uploader("ISG設定ファイルをアップロードしてください", type=["json", "txt"])
 
 if uploaded_file:
-    content = uploaded_file.getvalue().decode("utf-8")
-    # "versionNumber": "2.x.x.x" を抽出
-    match = re.search(r'"versionNumber":\s*"([\d\.]+)"', content)
+    # 1. ファイル内容の抽出
+    file_content = uploaded_file.getvalue().decode("utf-8")
+    
+    # 2. バージョン番号の抽出
+    match = re.search(r'"versionNumber":\s*"([\d\.]+)"', file_content)
     
     if match:
         version = match.group(1)
-        st.subheader(f"解析結果: ISG バージョン {version}")
+        st.success(f"解析対象バージョン: {version}")
         
+        # 3. アップグレード・ダウングレード情報の表示
         if version in VERSION_DATA:
             data = VERSION_DATA[version]
             
-            # Upgrade/Downgrade Pathの表示
             col1, col2 = st.columns(2)
             with col1:
                 st.info(f"**Upgrade Path**\n" + "\n".join([f"- {v}" for v in data["up"]]))
             with col2:
                 st.warning(f"**Downgrade Path**\n" + "\n".join([f"- {v}" for v in data["down"]]))
             
-            # Upgrade Pathのリンクを全て生成
+            # 4. 関連リンクの表示
             st.write("#### 関連リンク (Upgrade Path対象)")
             for up_ver in data["up"]:
                 if up_ver in data["links"]:
                     st.write(f"- **{up_ver}**: [ダウンロードリンク]({data['links'][up_ver]})")
-                else:
-                    st.write(f"- **{up_ver}**: リンクなし")
-        else:
-            st.warning(f"バージョン {version} のデータは定義されていません。")
+        
+        # 5. 以降のコマンド整形・自動生成処理
+        st.divider()
+        st.subheader("⚙️ コマンド自動生成・整形処理")
+        st.write("アップロードされたファイルを使用してコマンドを自動生成します。")
+        # ここに file_content を使用した具体的な整形ロジックを追記してください
+        st.code("# 生成されたコマンドがここに表示されます", language="bash")
+        
     else:
-        st.error("ファイルから 'versionNumber' を特定できませんでした。")
-
-# 1ページ目のメイン処理
+        st.error("アップロードされたファイルから 'versionNumber' を特定できませんでした。")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
@@ -99,9 +102,7 @@ all_generated_cmds_dict = {
 # ==========================================
 with tab1:
     st.header("ISGファイル情報の解析とコマンド自動生成")
-    
-    uploaded_file = st.file_uploader("ISG設定ファイル（JSONまたはテキスト）をアップロードしてください", type=["json", "txt"], key="isg_upload")
-    
+     
     if uploaded_file is not None:
         string_data = uploaded_file.getvalue().decode("utf-8")
         
