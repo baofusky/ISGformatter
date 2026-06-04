@@ -102,7 +102,9 @@ all_generated_cmds_dict = {
 # ==========================================
 with tab1:
     st.header("ISGファイル情報の解析とコマンド自動生成")
-     
+    
+    uploaded_file = uploaded_file
+    
     if uploaded_file is not None:
         string_data = uploaded_file.getvalue().decode("utf-8")
         
