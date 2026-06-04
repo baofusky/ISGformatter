@@ -71,37 +71,6 @@ if uploaded_file:
 
 # 1ページ目のメイン処理
 st.header("ISGOS バージョン解析")
-isg_input = st.text_input("ISGOSバージョンを入力してください (例: 2.5.1.1)")
-
-if isg_input in VERSION_DATA:
-    data = VERSION_DATA[isg_input]
-    
-    # 枠を表示
-    st.subheader(f"ISGバージョン: {isg_input}")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.write("**Upgrade Path**")
-        st.info("\n".join(data["up"]))
-    with col2:
-        st.write("**Downgrade Path**")
-        st.warning("\n".join(data["down"]))
-    
-    # Upgrade Pathに含まれるバージョンとリンクの突合表示
-    st.write("#### 関連リンク")
-    found_links = False
-    for up_ver in data["up"]:
-        if up_ver in data["link"]:
-            st.write(f"- {up_ver}: {data['link'][up_ver]}")
-            found_links = True
-    if not found_links:
-        st.write("対応するリンクが見つかりませんでした。")
-        
-    # 整形データの表示（ダウンロードボタン付き）
-    report_text = f"Version: {isg_input}\nUpgrade Path: {', '.join(data['up'])}\nDowngrade Path: {', '.join(data['down'])}"
-    show_custom_area("詳細レポート", report_text, 150, "report", "isg_report.txt")
-
-elif isg_input:
-    st.error("入力されたバージョンは登録されていません。")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
