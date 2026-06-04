@@ -7,6 +7,70 @@ st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wid
 
 st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
 
+def show_custom_area(label, text_value, height, unique_key, download_filename):
+    st.markdown(f"**{label}**")
+    title_col, dl_col = st.columns([3, 1.2])
+    with title_col:
+        st.caption("💡 枠内の右上に表示されるボタンからクリップボードにコピーできます。")
+    with dl_col:
+        is_disabled = not text_value.strip() or "は見つかりませんでした" in text_value
+        st.download_button(
+            label="📥 utf8TXTダウンロード",
+            data=text_value.encode("utf-8"),
+            file_name=download_filename,
+            mime="text/plain",
+            key=f"btn_dl_{unique_key}",
+            disabled=is_disabled,
+            use_container_width=True
+        )
+    st.code(text_value, language="text")
+
+# 🔗 バージョン情報の定義
+VERSION_DATA = {
+    "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "link": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
+    "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "link": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
+    "2.4.10.1": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1"], "link": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf"}},
+    "2.5.1.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1"], "down": ["any hight version of 2.5"], "link": {"2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"}},
+    "2.5.2.1": {"up": ["any2.x", "2.4.10.1", "2.5.2.1"], "down": ["any hight version of 2.5"], "link": {"2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"}},
+    "2.5.3.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.3.1"], "down": ["any hight version of 2.5"], "link": {"2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"}},
+    "2.5.4.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"], "down": ["any hight version of 2.5"], "link": {"2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"}},
+    "2.5.5.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"], "down": ["any hight version of 2.5"], "link": {"2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}},
+}
+
+# 1ページ目のメイン処理
+st.header("ISGOS バージョン解析")
+isg_input = st.text_input("ISGOSバージョンを入力してください (例: 2.5.1.1)")
+
+if isg_input in VERSION_DATA:
+    data = VERSION_DATA[isg_input]
+    
+    # 枠を表示
+    st.subheader(f"ISGバージョン: {isg_input}")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write("**Upgrade Path**")
+        st.info("\n".join(data["up"]))
+    with col2:
+        st.write("**Downgrade Path**")
+        st.warning("\n".join(data["down"]))
+    
+    # Upgrade Pathに含まれるバージョンとリンクの突合表示
+    st.write("#### 関連リンク")
+    found_links = False
+    for up_ver in data["up"]:
+        if up_ver in data["link"]:
+            st.write(f"- {up_ver}: {data['link'][up_ver]}")
+            found_links = True
+    if not found_links:
+        st.write("対応するリンクが見つかりませんでした。")
+        
+    # 整形データの表示（ダウンロードボタン付き）
+    report_text = f"Version: {isg_input}\nUpgrade Path: {', '.join(data['up'])}\nDowngrade Path: {', '.join(data['down'])}"
+    show_custom_area("詳細レポート", report_text, 150, "report", "isg_report.txt")
+
+elif isg_input:
+    st.error("入力されたバージョンは登録されていません。")
+
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
     st.markdown(f"**{label}**")
