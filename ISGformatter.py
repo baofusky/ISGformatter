@@ -34,10 +34,11 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
 
 
 # タブ構造
-tab1, tab2, tab3 = st.tabs([
+tab1, tab2, tab3, tab4 = st.tabs([
     "1ページ目：ISGファイルの読込・整形・コマンド作成", 
     "2ページ目：SGOSファイルの整形",
-    "3ページ目：作成コマンドの一括出力"
+    "3ページ目：作成コマンドの一括出力",
+    "4ページ目：SGOS情報確認"
 ])
 
 # 一括出力用コマンドの格納辞書を初期化
@@ -1136,3 +1137,64 @@ with tab3:
         show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
     else:
         st.warning("表示するコマンドがありません。")
+    # ==========================================
+# 4ページ目：SGOS情報確認
+# ==========================================
+with tab4:
+    st.header("🔍 SGOS 情報確認")
+
+    # --- 1. ファイルアップロードエリア ---
+    st.subheader("📁 ファイルアップロード")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.write("お客様提供情報")
+        up_sys_cust = st.file_uploader("SG_sysinfo", key="sys_cust")
+        up_conf_cust = st.file_uploader("SG_config", key="conf_cust")
+    with col2:
+        st.write("キッティング前")
+        up_sys_pre = st.file_uploader("SG_sysinfo", key="sys_pre")
+        up_ev_pre = st.file_uploader("SG_event", key="ev_pre")
+    with col3:
+        st.write("キッティング後")
+        up_sys_post = st.file_uploader("SG_sysinfo", key="sys_post")
+        up_conf_post = st.file_uploader("SG_config", key="conf_post")
+
+    # --- キッティング前の確認処理 ---
+    st.markdown("---")
+    st.subheader("✅ キッティング前の確認")
+
+    if up_sys_cust and up_sys_pre:
+        # 比較処理用ロジック（簡易版）
+        def get_sysinfo_data(file_content):
+            # 行ごとに解析し必要な情報を抽出する関数
+            return {"serial": "...", "ram": "...", "cores": "..."} # 実際の実装を入れる
+
+        data_cust = get_sysinfo_data(up_sys_cust.getvalue().decode())
+        data_pre = get_sysinfo_data(up_sys_pre.getvalue().decode())
+
+        # チェック項目1
+        col_c1, col_c2 = st.columns([1, 4])
+        is_match = (data_cust == data_pre) # 比較ロジック
+        status_color = "green" if is_match else "red"
+        col_c1.markdown(f":{status_color}[{'OK' if is_match else 'NG'}]")
+        col_c2.write("ハードウェア基本情報の一致確認")
+        
+        # チェック項目2～5（同様のロジックで実装）
+        # ... (Storage100.5.5.1抽出, Current State確認, CPU/Memory使用率確認)
+
+    # --- キッティング後の比較 ---
+    st.markdown("---")
+    st.subheader("🔧 キッティング後の比較")
+    if up_conf_cust and up_conf_post:
+        # コンフィグ比較処理
+        # 不一致があれば表示
+        st.warning("不一致箇所を表示します...")
+    else:
+        st.info("キッティング後のSG_configファイルをアップロードすると比較が実行されます。")
+
+    # --- コンテンツフィルタ設定表示 ---
+    if up_conf_cust:
+        st.markdown("---")
+        st.subheader("🛡️ コンテンツフィルタ設定")
+        # reで指定範囲抽出して表示
+        # re.search(r'!- BEGIN content_filtering(.*?)!- END content_filtering', text, re.DOTALL)
