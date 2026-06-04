@@ -1138,17 +1138,17 @@ with tab3:
     else:
         st.warning("表示するコマンドがありません。")
 # ==========================================
-# 4ページ目：SGOS情報確認（詳細表示付き）
+# 4ページ目：SGOS情報確認
 # ==========================================
 with tab4:
     st.header("🔍 SGOS 情報確認")
 
-    # 1. ファイルアップロードエリア
+    # 1. ファイルアップロード
     st.subheader("📁 ファイルアップロード")
     c1, c2, c3 = st.columns(3)
     with c1:
-        up_sys_cust = st.file_uploader("お客様: SG_sysinfo", key="sys_cust")
-        up_conf_cust = st.file_uploader("お客様: SG_config", key="conf_cust")
+        up_sys_cust = st.file_uploader("お客様提供: SG_sysinfo", key="sys_cust")
+        up_conf_cust = st.file_uploader("お客様提供: SG_config", key="conf_cust")
     with c2:
         up_sys_pre = st.file_uploader("キッティング前: SG_sysinfo", key="sys_pre")
         up_ev_pre = st.file_uploader("キッティング前: SG_event", key="ev_pre")
@@ -1157,56 +1157,107 @@ with tab4:
         up_conf_post = st.file_uploader("キッティング後: SG_config", key="conf_post")
 
     st.markdown("---")
-    
-    # 2. キッティング前の確認処理
-    st.subheader("✅ キッティング前の確認")
+
+    # 判定結果保存用リスト
+    results = []
+
+    # --- キッティング前の確認 ---
     if up_sys_cust and up_sys_pre:
-        cust_data = up_sys_cust.getvalue().decode().splitlines()
-        pre_data = up_sys_pre.getvalue().decode().splitlines()
+        st.subheader("✅ キッティング前の確認")
+        sys_c = up_sys_cust.getvalue().decode().splitlines()
+        sys_p = up_sys_pre.getvalue().decode().splitlines()
 
-        # 抽出ロジック（簡易例）
-        def extract_info(lines):
-            info = {"Serial": "", "RAM": "", "Cores": ""}
-            for l in lines:
-                if "Serial Number is" in l: info["Serial"] = l
-                if "RAM:" in l: info["RAM"] = l
-                if "Number of cores:" in l: info["Cores"] = l
-            return info
+        def get_info(lines):
+            return {
+                "serial": [l for l in lines if "Serial Number is" in l],
+                "ram": [l for l in lines if "RAM:" in l],
+                "cores": [l for l in lines if "Number of cores:" in l]
+            }
 
-        cust_info = extract_info(cust_data)
-        pre_info = extract_info(pre_data)
-
-        # 比較結果と詳細表示
-        col_res, col_detail = st.columns([1, 3])
+        c_info, p_info = get_info(sys_c), get_info(sys_p)
+        is_match = (c_info == p_info)
+        results.append(is_match)
         
-        # 比較ロジック
-        is_ok = (cust_info == pre_info)
-        color = "green" if is_ok else "red"
-        
-        col_res.markdown(f"### :{color}[{'OK' if is_ok else 'NG'}]")
-        with col_detail:
-            st.markdown("**詳細比較内容:**")
-            diff_text = f"お客様側:\n{cust_info}\n\nキッティング前:\n{pre_info}"
-            st.code(diff_text, language="text")
+        col1, col2 = st.columns([1, 4])
+        col1.markdown(f"### :{'green' if is_match else 'red'}[{'OK' if is_match else 'NG'}]")
+        col2.write("ハードウェア情報の比較 (Serial/RAM/Cores)")
+        show_custom_area("詳細比較", f"お客様:\n{c_info}\n\nキッティング前:\n{p_info}", 150, "c1", "c1.txt")
 
-    # 3. コンテンツフィルタ設定表示
+    # --- チェック項目2: Storage ---
+    if up_sys_pre:
+        st.subheader("✅ チェック項目2: Storage情報")
+        target = "Storage100.5.5.1     00000000:00000000"
+        found_line = next((l for l in sys_p if "Storage100.5.5.1" in l), "")
+        is_ok2 = (found_line.strip() == target)
+        results.append(is_ok2)
+        st.markdown(f"判定: :{'green' if is_ok2 else 'red'}[{'OK' if is_ok2 else 'NG'}]")
+        show_custom_area("抽出内容", found_line, 70, "c2", "c2.txt")
+
+    # --- チェック項目3: Current State ---
+    if up_sys_pre:
+        st.subheader("✅ チェック項目3: Current State確認")
+        skip_w = ["Overall Health", "Base License Expiration", "Health Check Status", 
+                  "Content Filter Communication Status", "SSL Proxy License Exporation", 
+                  "License Server Communication Status", "Application Classification Communication Status"]
+        
+        states = []
+        is_ok3 = True
+        for i, l in enumerate(sys_p):
+            if "Current State" in l:
+                prev = sys_p[i-1] if i > 0 else ""
+                states.append(f"Header: {prev}\nData: {l}")
+                if not any(w in prev for w in skip_w): is_ok3 = False
+        
+        results.append(is_ok3)
+        st.markdown(f"判定: :{'green' if is_ok3 else 'red'}[{'OK' if is_ok3 else 'NG'}]")
+        show_custom_area("抽出内容", "\n\n".join(states), 200, "c3", "c3.txt")
+
+    # --- チェック項目4/5: CPU/Memory ---
+    for title, key_str, res_list in [("CPU", "system:cpu-usage~hourly", []), ("メモリ", "system:memory-usage~hourly", [])]:
+        st.subheader(f"✅ {title}使用率確認")
+        lines = [l for l in sys_p if key_str in l]
+        vals = []
+        for l in lines:
+            m = re.search(r'\(60, 60\):\s*(.*)', l)
+            if m: vals.extend([int(n) for n in re.findall(r'\d+', m.group(1))])
+        
+        is_ok = all(v <= 50 for v in vals) if vals else True
+        results.append(is_ok)
+        st.markdown(f"判定: :{'green' if is_ok else 'red'}[{'OK' if is_ok else 'NG'}]")
+        show_custom_area("数値データ", str(vals), 100, f"c{title}", f"{title}.txt")
+
+    # --- チェック項目6: Eventログ ---
+    if up_ev_pre:
+        st.subheader("✅ チェック項目6: イベントログエラー確認")
+        errs = ["read error has occurred", "arning, a write episoded", "PSU no input"]
+        content = up_ev_pre.getvalue().decode()
+        found = [e for e in errs if e in content]
+        is_ok6 = (len(found) == 0)
+        results.append(is_ok6)
+        st.markdown(f"判定: :{'green' if is_ok6 else 'red'}[{'OK' if is_ok6 else 'NG'}]")
+        show_custom_area("検出されたエラー", str(found) if found else "エラーなし", 100, "c6", "c6.txt")
+
+    # --- 全体判定 ---
+    if len(results) >= 6:
+        st.markdown("---")
+        if all(results):
+            st.success("### ✅ 全体判定：OK")
+        else:
+            st.error("### ❌ 全体判定：NG")
+
+    # --- コンテンツフィルタ & 後確認 ---
     if up_conf_cust:
         st.subheader("🛡️ コンテンツフィルタ設定")
-        conf_text = up_conf_cust.getvalue().decode()
-        match = re.search(r'!- BEGIN content_filtering(.*?)!- END content_filtering', conf_text, re.DOTALL)
-        if match:
-            show_custom_area("コンテンツフィルタ設定内容", match.group(0), 200, "cf_config", "cf_config.txt")
+        m = re.search(r'!- BEGIN content_filtering(.*?)!- END content_filtering', up_conf_cust.getvalue().decode(), re.DOTALL)
+        if m: show_custom_area("抽出内容", m.group(0), 200, "cf", "cf.txt")
 
-    # 4. キッティング後の比較
     if up_conf_cust and up_conf_post:
-        st.subheader("🔧 キッティング後の比較")
-        # 簡易的な差分抽出
-        cust_lines = set(up_conf_cust.getvalue().decode().splitlines())
-        post_lines = set(up_conf_post.getvalue().decode().splitlines())
-        diff = cust_lines ^ post_lines # 対称差分
-        
+        st.subheader("🔧 キッティング後のConfig比較")
+        c_lines = set(up_conf_cust.getvalue().decode().splitlines())
+        p_lines = set(up_conf_post.getvalue().decode().splitlines())
+        diff = c_lines ^ p_lines
         if diff:
-            st.error("以下の不一致が検出されました:")
-            st.code("\n".join(list(diff)[:20]), language="text") # 抜粋表示
+            st.error("不一致あり")
+            show_custom_area("不一致箇所", "\n".join(list(diff)), 300, "diff", "diff.txt")
         else:
-            st.success("Configに不一致はありませんでした。")
+            st.success("一致しています")
