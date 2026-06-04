@@ -1,75 +1,58 @@
-import json
-import re
-import streamlit as st
-
-# ページ全体のレイアウト設定
-st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
-
-st.title("ISG & SGOS 設定ファイル 変換・整形ツール")
-
 import streamlit as st
 import re
 import json
 
 # ページ設定
-st.set_page_config(page_title="ISG & SGOS 構成・整形ツール", layout="wide")
+st.set_page_config(page_title="ISG 構成・整形ツール", layout="wide")
+st.title("ISG 設定ファイル 解析ツール")
 
-# 共通コンポーネント関数
-def show_custom_area(label, text_value, height, unique_key, download_filename):
-    st.markdown(f"**{label}**")
-    title_col, dl_col = st.columns([3, 1.2])
-    with title_col:
-        st.caption("💡 右上のボタンからダウンロードできます。")
-    with dl_col:
-        st.download_button("📥 ダウンロード", data=text_value.encode("utf-8"), file_name=download_filename, key=f"btn_dl_{unique_key}", use_container_width=True)
-    st.code(text_value, language="text")
-
-# 🔗 バージョンデータ定義
+# 🔗 バージョンデータ定義（Upgrade Pathの全リンクを網羅）
 VERSION_DATA = {
-    "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "link": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
-    "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "link": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
-    "2.4.10.1": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1"], "link": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf"}},
-    "2.5.1.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1"], "down": ["any hight version of 2.5"], "link": {"2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"}},
-    "2.5.2.1": {"up": ["any2.x", "2.4.10.1", "2.5.2.1"], "down": ["any hight version of 2.5"], "link": {"2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"}},
-    "2.5.3.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.3.1"], "down": ["any hight version of 2.5"], "link": {"2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"}},
-    "2.5.4.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"], "down": ["any hight version of 2.5"], "link": {"2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"}},
-    "2.5.5.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"], "down": ["any hight version of 2.5"], "link": {"2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}},
+    "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "links": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
+    "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "links": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
+    "2.4.10.1": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf"}},
+    "2.5.1.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"}},
+    "2.5.2.1": {"up": ["any2.x", "2.4.10.1", "2.5.2.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"}},
+    "2.5.3.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.3.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"}},
+    "2.5.4.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"}},
+    "2.5.5.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0", "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}},
 }
 
-# 1ページ目のメイン処理
-uploaded_file = st.file_uploader("ISG設定ファイルをアップロード", type=["json", "txt"])
+# 統合されたファイルアップロードボタン
+uploaded_file = st.file_uploader("設定ファイルを一つアップロードしてください", type=["json", "txt"])
 
 if uploaded_file:
     content = uploaded_file.getvalue().decode("utf-8")
-    # "versionNumber": "x.x.x.x" を抽出
+    # "versionNumber": "2.x.x.x" を抽出
     match = re.search(r'"versionNumber":\s*"([\d\.]+)"', content)
     
     if match:
-        extracted_ver = match.group(1)
-        st.success(f"ファイルからバージョン {extracted_ver} を検出しました。")
+        version = match.group(1)
+        st.subheader(f"解析結果: ISG バージョン {version}")
         
-        if extracted_ver in VERSION_DATA:
-            data = VERSION_DATA[extracted_ver]
+        if version in VERSION_DATA:
+            data = VERSION_DATA[version]
             
-            st.subheader(f"ISGバージョン: {extracted_ver}")
-            c1, c2 = st.columns(2)
-            with c1:
-                st.info(f"**Upgrade Path**\n" + "\n".join(data["up"]))
-            with c2:
-                st.warning(f"**Downgrade Path**\n" + "\n".join(data["down"]))
+            # Upgrade/Downgrade Pathの表示
+            col1, col2 = st.columns(2)
+            with col1:
+                st.info(f"**Upgrade Path**\n" + "\n".join([f"- {v}" for v in data["up"]]))
+            with col2:
+                st.warning(f"**Downgrade Path**\n" + "\n".join([f"- {v}" for v in data["down"]]))
             
-            # Upgrade Pathのリンク一覧表示
+            # Upgrade Pathのリンクを全て生成
             st.write("#### 関連リンク (Upgrade Path対象)")
             for up_ver in data["up"]:
-                if up_ver in data["link"]:
-                    st.write(f"- {up_ver}: [リンク]({data['link'][up_ver]})")
+                if up_ver in data["links"]:
+                    st.write(f"- **{up_ver}**: [ダウンロードリンク]({data['links'][up_ver]})")
+                else:
+                    st.write(f"- **{up_ver}**: リンクなし")
         else:
-            st.warning(f"バージョン {extracted_ver} は定義されていません。")
+            st.warning(f"バージョン {version} のデータは定義されていません。")
     else:
-        st.error("ファイルから 'versionNumber' を抽出できませんでした。")
+        st.error("ファイルから 'versionNumber' を特定できませんでした。")
 
 # 1ページ目のメイン処理
-st.header("ISGOS バージョン解析")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
