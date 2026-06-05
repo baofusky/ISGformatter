@@ -8,6 +8,7 @@ st.title("ISG 設定ファイル 解析・生成ツール")
 
 # 🔗 バージョンデータ定義
 VERSION_DATA = {
+    "2.4.2.1": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.2.1"], "links": {"2.4.2.1": "https://techdata-marketing.box.com/s/8o3ge7tqskhqaqkrvlwt7q89zm2hfqu7"}},
     "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "links": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
     "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "links": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
     "2.4.10.1": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf"}},
