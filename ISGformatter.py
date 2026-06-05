@@ -143,17 +143,18 @@ if uploaded_file:
     else:
         st.error("ファイルから 'versionNumber' を特定できませんでした。")
 
-selected_ver = "2.4.0.1" # ここは現在の選択状態に合わせてください
+selected_ver = st.selectbox("バージョン選択", list(VERSION_DATA.keys()))
+st.write("Downgrade Path:")
 
-st.write("### Downgrade Path")
-# VERSION_DATA[selected_ver]["down"] はリストです
+# VERSION_DATA[selected_ver]["down"] はリストなので、ループで回せる
 for ver in VERSION_DATA[selected_ver]["down"]:
-    # links 辞書から URL を取得
+    # links 辞書から URL を取得（存在しなければリンクなし）
     link = VERSION_DATA[selected_ver]["links"].get(ver)
+    
     if link:
-        st.write(f"- {ver}: [ダウンロードリンク]({link})")
+        st.write(f"- {ver}: [ダウンロード]({link})")
     else:
-        st.write(f"- {ver} (リンクなし)")
+        st.write(f"- {ver}")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
