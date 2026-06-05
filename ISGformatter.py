@@ -53,14 +53,7 @@ if uploaded_file:
             # 💡 バージョンが辞書にない場合の表示
             st.error(f"バージョン {version} は特別ですので、古すぎるか新しすぎるかです。ファームウェアの入手方法について、お手数ですが、別途相談してください。")
             
-            st.write("#### 関連リンク (downgrade Path対象)")
-            for down_ver in data["down"]:
-                if down_ver in data["links"]:
-                    st.write(f"- **{down_ver}**: [ダウンロードリンク]({data['links'][up_ver]})")
-        else:
-            # 💡 バージョンが辞書にない場合の表示
-            st.error(f"バージョン {version} は特別ですので、古すぎるか新しすぎるかです。ファームウェアの入手方法について、お手数ですが、別途相談してください。")
-        
+
         st.divider()
 
     else:
