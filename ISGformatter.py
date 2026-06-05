@@ -8,100 +8,16 @@ st.title("ISG 設定ファイル 解析・生成ツール")
 
 # 🔗 バージョンデータ定義
 VERSION_DATA = {
-    "2.4.0.1": {
-        "up": ["より低いバージョンから直接アップグレード可能"],
-        "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.0.1"],
-        "links": {
-            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
-            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.4.0.1": "https://techdata-marketing.box.com/s/88lkavdguzdiylip0j6c5vgm41w72uxr"
-        }
-    },
-    "2.4.2.1": {
-        "up": ["より低いバージョンから直接アップグレード可能"],
-        "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.2.1"],
-        "links": {
-            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
-            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.4.2.1": "https://techdata-marketing.box.com/s/8o3ge7tqskhqaqkrvlwt7q89zm2hfqu7"
-        }
-    },
-    "2.4.8.0": {
-        "up": ["より低いバージョンから直接アップグレード可能"],
-        "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8.0"],
-        "links": {
-            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
-            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.4.8.0": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"
-        }
-    },
-    "2.4.9.0": {
-        "up": ["より低いバージョンから直接アップグレード可能"],
-        "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9.0"],
-        "links": {
-            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
-            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.4.9.0": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"
-        }
-    },
-    "2.4.10.1": {
-        "up": ["より低いバージョンから直接アップグレード可能"],
-        "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1"],
-        "links": {
-            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
-            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf"
-        }
-    },
-    "2.5.1.1": {
-        "up": ["any2.x", "2.4.10.1", "2.5.1.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"
-        }
-    },
-    "2.5.2.1": {
-        "up": ["any2.x", "2.4.10.1", "2.5.2.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"
-        }
-    },
-    "2.5.3.1": {
-        "up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.3.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v",
-            "2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"
-        }
-    },
-    "2.5.4.1": {
-        "up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v",
-            "2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"
-        }
-    },
-    "2.5.5.1": {
-        "up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {
-            "2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf",
-            "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v",
-            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
-            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"
-        }
-    }
+    "2.4.8": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.8"], "links": {"2.4.8": "https://techdata-marketing.box.com/s/eisbjvx8p20xxmso6wflybc712rp1rsj"}},
+    "2.4.9": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1", "2.4.9"], "links": {"2.4.9": "https://techdata-marketing.box.com/s/gljr9bmis5mpsmygiqjfm8kaumk87pz7"}},
+    "2.4.10.1": {"up": ["より低いバージョンから直接アップグレード可能"], "down": ["2.5.5.1", "2.5.4.2", "2.4.10.1"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf"}},
+    "2.5.1.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"}},
+    "2.5.2.1": {"up": ["any2.x", "2.4.10.1", "2.5.2.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"}},
+    "2.5.3.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.3.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"}},
+    "2.5.4.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"}},
+    "2.5.5.1": {"up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"], "down": ["any hight version of 2.5"], "links": {"2.4.10.1": "https://techdata-marketing.box.com/s/gqxbn470yd8y7pnayy3lba872w1rxfgf", "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v", "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0", "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}},
 }
+
 # 共通UI: ファイルアップロード
 uploaded_file = st.file_uploader("ISG設定ファイルをアップロードしてください", type=["json", "txt"])
 
