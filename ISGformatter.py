@@ -59,28 +59,49 @@ VERSION_DATA = {
     },
     "2.5.1.1": {
         "up": ["any2.x", "2.4.10.1", "2.5.1.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {"2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"}
+        "down": ["2.5.5.1", "2.5.4.2", "2.5.3.1", "2.5.2.1", "2.5.1.1"],
+        "links": {
+            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
+            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
+            "2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl",
+            "2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76",
+            "2.5.1.1": "https://techdata-marketing.box.com/s/b9aielst2dzjy6a6zkafhns6r8r6257v"
+        }
     },
     "2.5.2.1": {
         "up": ["any2.x", "2.4.10.1", "2.5.2.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {"2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"}
+        "down": ["2.5.5.1", "2.5.4.2", "2.5.3.1", "2.5.2.1"],
+        "links": {
+            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
+            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
+            "2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl",
+            "2.5.2.1": "https://techdata-marketing.box.com/s/p7xcrfgi52qoexiqzeninyhbe9yeel76"
+        }
     },
     "2.5.3.1": {
         "up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.3.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {"2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"}
+        "down": ["2.5.5.1", "2.5.4.2", "2.5.3.1"],
+        "links": {
+            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
+            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
+            "2.5.3.1": "https://techdata-marketing.box.com/s/seqq1ml85qzidxj3em1sqzgyu4tc89dl"
+        }
     },
     "2.5.4.1": {
         "up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {"2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"}
+        "down": ["2.5.5.1", "2.5.4.2", "2.5.4.1"],
+        "links": {
+            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf",
+            "2.5.4.2": "https://techdata-marketing.box.com/s/xz724fthzoh738fi6pxf0lk1w4s2tga0",
+            "2.5.4.1": "https://techdata-marketing.box.com/s/wcm1rwou15pjdi3woqlhb0bmeshnv3dm"
+        }
     },
     "2.5.5.1": {
         "up": ["any2.x", "2.4.10.1", "2.5.1.1", "2.5.4.2", "2.5.5.1"],
-        "down": ["any hight version of 2.5"],
-        "links": {"2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"}
+        "down": ["2.5.5.1"],
+        "links": {
+            "2.5.5.1": "https://techdata-marketing.box.com/s/fotdnvxwb3zc1j2xi6ss5c19wvyhovrf"
+        }
     }
 }
 # 共通UI: ファイルアップロード
@@ -122,14 +143,17 @@ if uploaded_file:
     else:
         st.error("ファイルから 'versionNumber' を特定できませんでした。")
 
-selected_ver = st.selectbox("バージョン選択", list(VERSION_DATA.keys()))
-st.write("Downgrade Path:")
-for v in VERSION_DATA[selected_ver]["down"]:
-    link = VERSION_DATA[selected_ver]["links"].get(v, "リンクなし")
-    if link != "リンクなし":
-        st.write(f"- {v}: [ダウンロード]({link})")
+selected_ver = "2.4.0.1" # ここは現在の選択状態に合わせてください
+
+st.write("### Downgrade Path")
+# VERSION_DATA[selected_ver]["down"] はリストです
+for ver in VERSION_DATA[selected_ver]["down"]:
+    # links 辞書から URL を取得
+    link = VERSION_DATA[selected_ver]["links"].get(ver)
+    if link:
+        st.write(f"- {ver}: [ダウンロードリンク]({link})")
     else:
-        st.write(f"- {v}")
+        st.write(f"- {ver} (リンクなし)")
 
 # 🛠️ すべての表示枠に「コピー」と「ダウンロード」を確実に配置する共通コンポーネント関数
 def show_custom_area(label, text_value, height, unique_key, download_filename):
