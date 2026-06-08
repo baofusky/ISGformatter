@@ -1388,12 +1388,9 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     st.write("ステップ3: ネットワーク設定")
-    
-    if 'isg-net-m-nic-info' in st.session_state:
     net_info = st.session_state['isg-net-m-nic-info']
     st.code(f"お客様から提供されたファイルから特定した管理ポートの情報は{net_info}")
-    else:
-    st.warning("管理ネットワーク情報がまだ読み込まれていません。")       
+   
 
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
