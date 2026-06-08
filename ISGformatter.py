@@ -1385,7 +1385,8 @@ with tab5:  # 5番目のタブを指定
     s_number = st.session_state.get('serial_numbe', '未検出')
     st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{model}\nシリアル番号:{serial}")  
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
-    if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
+    if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK！"): st.success("OK")
+    
     st.write("ステップ3: ISGのネットワークを設定する")
     
     st.code(f"お客様から提供されたファイルから特定した管理ポートの情報は{netwok_a}")
