@@ -1344,7 +1344,7 @@ with tab5:  # 5番目のタブを指定
 
     st.markdown("---")
     st.subheader("フェーズ一：同じISGバージョンのインストール")
-    st.write("ステップ1: 定常情報のisg_configファイルをアップロードします。")
+    st.write("ステップ1: お客様提供情報のisg_configファイルをアップロードします。")
     st.write("ステップ2: アップグレードパスとダウングレードパスを確認します。")
     st.write("ステップ3: `localhost# installed-systems view` でファームウェアを確認します。")
     st.write("ステップ4: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
