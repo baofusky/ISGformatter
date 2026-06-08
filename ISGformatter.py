@@ -1335,56 +1335,68 @@ with tab5:  # 5番目のタブを指定
     st.header("📋 ISG設定をリストアする手順")
     
     st.markdown("### 準備作業")
-    st.info("電源ケーブル、シリアルコンソール接続、TeraTermログ設定(受付No_日付.txt)を確認してください。")
+    st.write("■二本の電源ケーブルを接続します。")
+    st.write("■シリアルコンソールに接続します。")
+    st.markdown("・ポート COMx (MD の環境に合わせて選択)")
+    st.markdown("・スピード 9600, データ 8 bit, パリティ none, ストップビット 1 bit, フロー制御 none")
+    st.write("・TeraTerm：[設定(S)] - [キーボード(K)] - Backspace キー にチェック")
+    st.write("・TeraTerm：[ファイル(F)] - [ログ(L)]（ファイル名：受付 No_日付.txt）")
 
-    # フェーズ一
+    st.markdown("---")
     st.subheader("フェーズ一：同じISGバージョンのインストール")
-    if st.checkbox("ステップ7: 再起動後、ISGファームウェアバージョンの一致を確認しました"):
-        st.success("確認OK")
+    st.write("ステップ1: 定常情報のisg_configファイルをアップロードします。")
+    st.write("ステップ2: アップグレードパスとダウングレードパスを確認します。")
+    st.write("ステップ3: `localhost# installed-systems view` でファームウェアを確認します。")
+    st.write("ステップ4: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
+    st.write("ステップ5: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。")
+    st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
+    st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
+    if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
 
-    # フェーズ二
+    st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
-    if st.checkbox("ステップ1: シリアルとモデル番号が基本情報と一致することを確認しました"): pass
-    if st.checkbox("ステップ2: health-monitoring view currentにてステータスOKを確認しました"): pass
-    
-    st.markdown("##### ステップ3: ネットワーク設定")
-    # アップロードされたファイル(up_conf_cust等)からinterface 0:0行から8行を表示
-    if 'up_conf_cust' in locals() and up_conf_cust:
-        content = up_conf_cust.getvalue().decode()
-        match = re.search(r'(interface 0:0.*?)(?=\n\n|\n[a-z])', content, re.DOTALL)
-        st.code(match.group(1) if match else "interface情報が見つかりません", language="text")
-    
+    st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
+    if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
+    st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
+    if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
+    st.write("ステップ3: ネットワーク設定（interface 0:0行から8行を参照）")
+    st.code("interface 0:0\n(アップロードファイルの内容を表示)", language="text")
+    st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
+    st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
     st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
-    if st.checkbox("ステップ8: SSH経由でadminログイン確認がすべてOK"):
-        st.success("ネットワーク・認証設定完了")
+    st.write("ステップ7: CLIに再ログインし、enableパスワードでのログイン確認を行います。")
+    st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
+    if st.checkbox("ステップ8: ネットワーク/ログイン確認が全てOK"): st.success("OK")
 
-    # フェーズ三
+    st.markdown("---")
     st.subheader("フェーズ三：ライセンスのインストール")
-    if st.checkbox("ステップ3: インストール済みライセンスIDがお客様情報と一致することを確認しました"):
-        st.success("OK")
+    st.write("ステップ1: CLIでenableパスワードでログインします。")
+    st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンスをペーストし Ctrl+D で終了します。")
+    st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
+    if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
 
-    # フェーズ四
+    st.markdown("---")
     st.subheader("フェーズ四：ISGconfigのリストア")
-    st.code("（三ページ目で表示されている作成済みコマンド一括表示の内容を表示）", language="text")
-
-    st.markdown("##### ステップ4: リストア後の情報比較")
-    up_after = st.file_uploader("リストア後設定ファイル (isg_config_after_restore.txt) をアップロード", type=['txt'])
+    st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
+    st.write("ステップ2: 作成済みコマンドを実行します。")
+    st.code("（三ページ目で作成された一括表示コマンド）", language="text")
+    st.write("ステップ3: エラー時はSynnexへ連絡します。")
+    st.write("ステップ4: リストア後 `show running-config | more` で確認します。")
     
-    if up_after:
-        content_after = up_after.getvalue().decode()
-        # 既存のロジックに合わせて 'agent enabled' 〜 'health-monitoring view settings' 直前までを抽出
+    uploaded_after = st.file_uploader("リストア後の設定ファイルをアップロード", type=['txt'])
+    if uploaded_after:
+        content = uploaded_after.getvalue().decode()
+        # agent enabled から health-monitoring view settings の上の行までを抽出
         pattern = r'(agent enabled.*?)(?=health-monitoring view settings)'
-        match = re.search(pattern, content_after, re.DOTALL)
-        
+        match = re.search(pattern, content, re.DOTALL)
         if match:
             col1, col2 = st.columns(2)
             with col1:
                 st.write("今回リストア後の設定")
                 st.code(match.group(1), language="text")
             with col2:
-                st.write("比較元（1ページ目のACL抜き取り後の設定）")
-                # 既存のACL抜き取り済み変数等を参照して表示
-                st.code("（ACL抜き取り後の内容）", language="text")
-                st.warning("差異がある場合ここに表示")
+                st.write("比較元（1ページ目のACL抜き取り後の内容）")
+                st.code("（ACL抜き取り後の設定）", language="text")
+                st.warning("不一致内容を表示")
         else:
-            st.error("設定内容の抽出範囲が見つかりません")
+            st.error("設定内容が抽出できませんでした")
