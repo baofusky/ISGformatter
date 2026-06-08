@@ -189,7 +189,35 @@ with tab1:
 
         st.markdown("---")
 
+# --- ISG管理ネットワーク情報 (base_cleaned_lines から抽出) ---
+    if 'base_cleaned_lines' in locals() and base_cleaned_lines:
+        st.subheader("🌐 ISG管理ネットワーク情報")
+        
+        # base_cleaned_lines はリスト形式であると想定しています
+        interface_block = []
+        found = False
+        
+        for i, line in enumerate(base_cleaned_lines):
+            # 文字列として interface 0:0 で始まるかチェック
+            if line.strip().startswith("interface 0:0"):
+                # リストから該当行から8行分をスライス
+                interface_block = base_cleaned_lines[i : i + 8]
+                found = True
+                break
+        
+        if found:
+            net_info_text = "\n".join(interface_block)
+            # 5ページ目以降でも利用できるようセッションに保存
+            st.session_state['isg-net-m-nic-info'] = net_info_text
+            # 枠内に表示
+            st.code(st.session_state['isg-net-m-nic-info'], language="text")
+        else:
+            st.warning("整形済みデータ (base_cleaned_lines) 内に 'interface 0:0' が見つかりませんでした。")
+    else:
+        st.warning("ACL抽出処理が完了していないか、データが存在しません。")
 
+        
+        
         
 # --------------------------------------
         # 👤 ローカルユーザー設定の精査と表示
