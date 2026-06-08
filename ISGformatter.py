@@ -139,6 +139,10 @@ with tab1:
         st.subheader("📌 基本情報")
         st.text(f"ISGOS バージョン :{isg_os_version}\nマシンモデル:{machine_model}\nシリアル番号:{serial_number}")
         st.markdown("---")
+
+        st.session_state.isg_os_version = isg_os_version
+        st.session_state.machine_model = machine_model
+        st.session_state.serial_number = serial_number
         
         lines = string_data.splitlines()
         base_cleaned_lines = []
@@ -1365,9 +1369,15 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
-  
-    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{isg_os_version}")       
-     
+
+    os_ver = st.session_state.get('isg_os_version', '未検出')
+    model = st.session_state.get('machine_model', '未検出')
+    serial = st.session_state.get('serial_number', '未検出') 
+    
+    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")       
+    
+
+    
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
@@ -1375,7 +1385,7 @@ with tab5:  # 5番目のタブを指定
 
     m_model = st.session_state.get('machine_mode', '未検出')
     s_number = st.session_state.get('serial_numbe', '未検出')
-    st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{m_model}\nシリアル番号:{s_number}")  
+    st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{model}\nシリアル番号:{serial}")  
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     st.write("ステップ3: ネットワーク設定")
