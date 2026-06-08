@@ -1362,7 +1362,8 @@ with tab5:  # 5番目のタブを指定
     st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{machine_model}\nシリアル番号:{serial_number}")  
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
-    st.write("ステップ3: ネットワーク設定（interface 0:0行から8行を参照）")
+    st.write("ステップ3: ネットワーク設定）")
+    
     st.code("interface 0:0\n(アップロードファイルの内容を表示)", language="text")
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
