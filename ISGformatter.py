@@ -200,8 +200,8 @@ with tab1:
                 return "\n".join(lines[i : i + 8])
         return "interface 0:0 の情報が見つかりませんでした。"
 
-    # 2. タブと表示処理
-    if 'up_conf_cust' in locals() and up_conf_cust:
+      # 2. タブと表示処理
+      if 'up_conf_cust' in locals() and up_conf_cust:
         content = up_conf_cust.getvalue().decode()
         net_info = extract_interface_info(content)
         
@@ -212,7 +212,7 @@ with tab1:
         st.subheader("ISG管理ネットワーク情報")
         with st.expander("interface 0:0 設定内容"):
             st.code(st.session_state['isg-net-m-nic-info'], language="text")
-    else:
+      else:
         st.warning("設定ファイルがアップロードされていないため、ネットワーク情報を抽出できません。")
 # --------------------------------------
         # 👤 ローカルユーザー設定の精査と表示
