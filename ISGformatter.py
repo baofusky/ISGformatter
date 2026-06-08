@@ -1331,7 +1331,7 @@ with tab4:
 # ※既存のtabs定義の末尾に "📋 ISG設定リストア" を追加してください
 # 例: tabs = st.tabs(["Tab1", "Tab2", "Tab3", "Tab4", "📋 ISG設定リストア"])
 
-with tabs[4]:  # 5番目のタブを指定
+with tab5:  # 5番目のタブを指定
     st.header("📋 ISG設定をリストアする手順")
     
     st.markdown("### 準備作業")
