@@ -1371,11 +1371,11 @@ with tab5:  # 5番目のタブを指定
     os_ver = st.session_state.get('isg_os_version', '未検出')
     model = st.session_state.get('machine_model', '未検出')
     serial = st.session_state.get('serial_number', '未検出') 
+    netwok_a = st.session_state.network_info_text
     
     st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")       
     
-
-    
+   
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
@@ -1387,8 +1387,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     st.write("ステップ3: ネットワーク設定")
-    net_info = st.session_state['isg-net-m-nic-info']
-    st.code(f"お客様から提供されたファイルから特定した管理ポートの情報は{net_info}")
+    st.code(f"お客様から提供されたファイルから特定した管理ポートの情報は{netwok_a}")
    
 
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
