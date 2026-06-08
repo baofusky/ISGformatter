@@ -99,6 +99,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "2ページ目：SGOSファイルの整形",
     "3ページ目：作成コマンドの一括出力",
     "4ページ目：SGOS情報確認"
+    "📋 ISG設定リストア"
 ])
 
 # 一括出力用コマンドの格納辞書を初期化
@@ -1326,4 +1327,64 @@ with tab4:
             show_custom_area("不一致箇所", "\n".join(list(diff)), 300, "diff", "diff.txt")
         else: st.success("一致しています")
            
+# --- 5ページ目の追加コード ---
+# ※既存のtabs定義の末尾に "📋 ISG設定リストア" を追加してください
+# 例: tabs = st.tabs(["Tab1", "Tab2", "Tab3", "Tab4", "📋 ISG設定リストア"])
 
+with tabs[4]:  # 5番目のタブを指定
+    st.header("📋 ISG設定をリストアする手順")
+    
+    st.markdown("### 準備作業")
+    st.info("電源ケーブル、シリアルコンソール接続、TeraTermログ設定(受付No_日付.txt)を確認してください。")
+
+    # フェーズ一
+    st.subheader("フェーズ一：同じISGバージョンのインストール")
+    if st.checkbox("ステップ7: 再起動後、ISGファームウェアバージョンの一致を確認しました"):
+        st.success("確認OK")
+
+    # フェーズ二
+    st.subheader("フェーズ二：ISGの設定を行う")
+    if st.checkbox("ステップ1: シリアルとモデル番号が基本情報と一致することを確認しました"): pass
+    if st.checkbox("ステップ2: health-monitoring view currentにてステータスOKを確認しました"): pass
+    
+    st.markdown("##### ステップ3: ネットワーク設定")
+    # アップロードされたファイル(up_conf_cust等)からinterface 0:0行から8行を表示
+    if 'up_conf_cust' in locals() and up_conf_cust:
+        content = up_conf_cust.getvalue().decode()
+        match = re.search(r'(interface 0:0.*?)(?=\n\n|\n[a-z])', content, re.DOTALL)
+        st.code(match.group(1) if match else "interface情報が見つかりません", language="text")
+    
+    st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
+    if st.checkbox("ステップ8: SSH経由でadminログイン確認がすべてOK"):
+        st.success("ネットワーク・認証設定完了")
+
+    # フェーズ三
+    st.subheader("フェーズ三：ライセンスのインストール")
+    if st.checkbox("ステップ3: インストール済みライセンスIDがお客様情報と一致することを確認しました"):
+        st.success("OK")
+
+    # フェーズ四
+    st.subheader("フェーズ四：ISGconfigのリストア")
+    st.code("（三ページ目で表示されている作成済みコマンド一括表示の内容を表示）", language="text")
+
+    st.markdown("##### ステップ4: リストア後の情報比較")
+    up_after = st.file_uploader("リストア後設定ファイル (isg_config_after_restore.txt) をアップロード", type=['txt'])
+    
+    if up_after:
+        content_after = up_after.getvalue().decode()
+        # 既存のロジックに合わせて 'agent enabled' 〜 'health-monitoring view settings' 直前までを抽出
+        pattern = r'(agent enabled.*?)(?=health-monitoring view settings)'
+        match = re.search(pattern, content_after, re.DOTALL)
+        
+        if match:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.write("今回リストア後の設定")
+                st.code(match.group(1), language="text")
+            with col2:
+                st.write("比較元（1ページ目のACL抜き取り後の設定）")
+                # 既存のACL抜き取り済み変数等を参照して表示
+                st.code("（ACL抜き取り後の内容）", language="text")
+                st.warning("差異がある場合ここに表示")
+        else:
+            st.error("設定内容の抽出範囲が見つかりません")
