@@ -1372,7 +1372,10 @@ with tab5:  # 5番目のタブを指定
     st.subheader("フェーズ二：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
     if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
-    st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{machine_model}\nシリアル番号:{serial_number}")  
+
+    m_model = st.session_state.get('machine_mode', '未検出')
+    s_number = st.session_state.get('serial_numbe', '未検出')
+    st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{m_model}\nシリアル番号:{s_number}")  
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     st.write("ステップ3: ネットワーク設定")
