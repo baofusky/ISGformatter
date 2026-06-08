@@ -1353,6 +1353,10 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
 
+    st.subheader("既存の基本情報")
+    # 例としてst.session_stateや既存変数'base_info'を表示
+    st.code(st.session_state.get('base_info', '基本情報が読み込まれていません'), language="text")
+    
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
