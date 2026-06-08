@@ -249,7 +249,7 @@ localhost(config-local-user-list-local-users)# edit user {user} password
         # 🌐 ネットワーク情報設定の抽出
         # --------------------------------------
         st.subheader("🌐 ネットワーク情報設定")
-        
+        st.session_state['isg-net-m-nic-info']={}
         network_info_lines = []
         start_index = -1
         
@@ -267,6 +267,7 @@ localhost(config-local-user-list-local-users)# edit user {user} password
         if network_info_lines:
             network_info_text = "\n".join(network_info_lines)
             show_custom_area("DNS/ネットワーク設定 (12行)", network_info_text, 250, "network_info", "network_info.txt")
+            st.session_state['isg-net-m-nic-info'] = net_info_text
         else:
             st.info("ネットワーク情報（dns name-serverから始まる設定）は見つかりませんでした。")
 
