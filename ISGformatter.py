@@ -1353,7 +1353,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
         
-    st.text(f"ISGOS バージョン :{isg_os_version}\nマシンモデル:{machine_model}\nシリアル番号:{serial_number}")
+    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{isg_os_version}")
     
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
