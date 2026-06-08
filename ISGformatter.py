@@ -1365,16 +1365,9 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
-   
-    if uploaded_file is not None:
-        string_data = uploaded_file.getvalue().decode("utf-8")
-        
-        isg_os_version = "未検出"
-        machine_model = "未検出"
-        serial_number = "未検出"    
-        
-    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{isg_os_version}")
-    
+    os_ver = st.session_state.get('isg_os_version', '未検出')
+    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")       
+     
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
