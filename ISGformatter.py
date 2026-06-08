@@ -1355,7 +1355,7 @@ with tab5:  # 5番目のタブを指定
 
     st.subheader("既存の基本情報")
     # 例としてst.session_stateや既存変数'base_info'を表示
-    st.code(st.session_state.get('base_info', '基本情報が読み込まれていません'), language="text")
+    st.code(st.text(f"ISGOS バージョン :{isg_os_version}\nマシンモデル:{machine_model}\nシリアル番号:{serial_number}"), '基本情報が読み込まれていません'), language="text")
     
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
