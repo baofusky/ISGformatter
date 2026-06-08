@@ -261,7 +261,7 @@ localhost(config-local-user-list-local-users)# edit user {user} password
         
         # 2. 見つかった場合、そこから12行を取得
         if start_index != -1:
-            network_info_lines = base_cleaned_lines[start_index : start_index + 12]
+            network_info_lines = base_cleaned_lines[start_index : start_index + 11]
         
         # 抽出結果の表示
         if network_info_lines:
