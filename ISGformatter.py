@@ -1325,51 +1325,5 @@ with tab4:
             st.error("不一致あり")
             show_custom_area("不一致箇所", "\n".join(list(diff)), 300, "diff", "diff.txt")
         else: st.success("一致しています")
-            
-with tab5: # 5つ目のタブ（インデックスは4）を指定
-    st.header("📋 ISG設定をリストアする手順")
+           
 
-    # フェーズ一
-    st.subheader("フェーズ一：同じISGバージョンのインストール")
-    if st.checkbox("ステップ7: 再起動後、ファームウェアバージョンの一致を確認しました"):
-        st.success("OK")
-
-    # フェーズ二
-    st.subheader("フェーズ二：ISGの設定を行う")
-    if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): pass
-    if st.checkbox("ステップ2: health-monitoringのステータスがOKであることを確認しました"): pass
-    
-    st.markdown("##### ステップ3: ネットワーク設定")
-    st.code("interface 0:0\n(アップロードファイルより抽出したinterface 0:0行から8行の内容)", language="text")
-    st.error("ステップ6: Do you want to secure the serial port? -> 必ず 'N' を入力")
-    
-    if st.checkbox("ステップ8: SSH経由でadminログイン確認がすべてOK"):
-        st.success("ネットワーク・認証設定完了")
-
-    # フェーズ三
-    st.subheader("フェーズ三：ライセンスのインストール")
-    if st.checkbox("ステップ3: ライセンスIDがお客様情報と一致することを確認しました"):
-        st.success("OK")
-
-    # フェーズ四
-    st.subheader("フェーズ四：ISGconfigのリストア")
-    st.code("(3ページ目で表示されている一括作成コマンドの内容)", language="text")
-
-    st.markdown("##### ステップ4: リストア後の情報比較")
-    uploaded_after = st.file_uploader("リストア後の設定ファイル (isg_config_after_restore.txt) をアップロード", type=['txt'], key="restore_uploader")
-    
-    if uploaded_after:
-        content = uploaded_after.getvalue().decode()
-        # 抽出ロジック（既存の構成に合わせてre.search等を利用）
-        pattern = r'(agent enabled.*?)(?=health-monitoring view settings)'
-        match = re.search(pattern, content, re.DOTALL)
-        if match:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("今回リストア後の設定")
-                st.code(match.group(1), language="text")
-            with col2:
-                st.write("比較元（1ページ目：ACL抜き取り後）")
-                st.code("(既存の設定内容)", language="text")
-        else:
-            st.error("指定範囲の設定内容が見つかりません")
