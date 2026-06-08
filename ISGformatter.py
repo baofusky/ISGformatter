@@ -192,6 +192,28 @@ with tab1:
 
         st.markdown("---")
 
+        def extract_interface_info(content):
+        # interface 0:0 から始まる行を見つけ、そこから8行抽出するロジック
+        lines = content.splitlines()
+        for i, line in enumerate(lines):
+            if line.strip().startswith("interface 0:0"):
+                return "\n".join(lines[i : i + 8])
+        return "interface 0:0 の情報が見つかりませんでした。"
+
+    # 2. タブと表示処理
+    if 'up_conf_cust' in locals() and up_conf_cust:
+        content = up_conf_cust.getvalue().decode()
+        net_info = extract_interface_info(content)
+        
+        # セッションへの保存
+        st.session_state['isg-net-m-nic-info'] = net_info
+        
+        # タブの追加
+        st.subheader("ISG管理ネットワーク情報")
+        with st.expander("interface 0:0 設定内容"):
+            st.code(st.session_state['isg-net-m-nic-info'], language="text")
+    else:
+        st.warning("設定ファイルがアップロードされていないため、ネットワーク情報を抽出できません。")
 # --------------------------------------
         # 👤 ローカルユーザー設定の精査と表示
         # --------------------------------------
