@@ -192,6 +192,8 @@ with tab1:
 
         st.markdown("---")
 
+
+        
 # --------------------------------------
         # 👤 ローカルユーザー設定の精査と表示
         # --------------------------------------
@@ -1389,15 +1391,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     st.write("ステップ3: ネットワーク設定")
-    
-    if 'up_conf_cust' in locals() and up_conf_cust:
-        # アップロードファイルの内容を取得して関数に渡す
-        content = up_conf_cust.getvalue().decode()
-        interface_info = get_interface_0_0_info(content)
-        st.code(interface_info, language="text")
-    else:
-        st.warning("1ページ目で設定ファイルがアップロードされていません。")
-        
+           
 
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
