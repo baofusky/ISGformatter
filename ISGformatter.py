@@ -1352,10 +1352,8 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
-
-    st.subheader("既存の基本情報")
-    # 例としてst.session_stateや既存変数'base_info'を表示
-    st.code(st.text(f"ISGOS バージョン :{isg_os_version}\nマシンモデル:{machine_model}\nシリアル番号:{serial_number}"), '基本情報が読み込まれていません'), language="text")
+        
+    st.text(f"ISGOS バージョン :{isg_os_version}\nマシンモデル:{machine_model}\nシリアル番号:{serial_number}")
     
     st.markdown("---")
     st.subheader("フェーズ二：ISGの設定を行う")
