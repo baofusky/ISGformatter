@@ -189,36 +189,7 @@ with tab1:
 
         st.markdown("---")
 
-if up_conf_cust:
-        st.subheader("🌐 ISG管理ネットワーク情報")
-        
-        # ACL抜き取り前の生データ（アップロードされたファイルそのもの）から処理
-        raw_content = up_conf_cust.getvalue().decode()
-        lines = raw_content.splitlines()
-        
-        interface_block = []
-        found = False
-        
-        # ファイル全体から interface 0:0 を検索
-        for i, line in enumerate(lines):
-            if line.strip().startswith("interface 0:0"):
-                interface_block = lines[i : i + 8]
-                found = True
-                break
-        
-        if found:
-            net_info_text = "\n".join(interface_block)
-            # 後続の5ページ目で使用するためセッションに保存
-            st.session_state['isg-net-m-nic-info'] = net_info_text
-            
-            # 抽出内容を枠内に表示
-            st.code(st.session_state['isg-net-m-nic-info'], language="text")
-        else:
-            st.warning("設定ファイル内に 'interface 0:0' が見つかりませんでした。")
-    else:
-        st.warning("設定ファイルがアップロードされていません。")
-        
-        
+       
 # --------------------------------------
         # 👤 ローカルユーザー設定の精査と表示
         # --------------------------------------
