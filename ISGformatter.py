@@ -192,8 +192,8 @@ with tab1:
 
         st.markdown("---")
 
-        def extract_interface_info(content):
-        # interface 0:0 から始まる行を見つけ、そこから8行抽出するロジック
+    def extract_interface_info(content):
+       # interface 0:0 から始まる行を見つけ、そこから8行抽出するロジック
         lines = content.splitlines()
         for i, line in enumerate(lines):
             if line.strip().startswith("interface 0:0"):
