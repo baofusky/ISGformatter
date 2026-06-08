@@ -1331,6 +1331,19 @@ with tab4:
 # ※既存のtabs定義の末尾に "📋 ISG設定リストア" を追加してください
 # 例: tabs = st.tabs(["Tab1", "Tab2", "Tab3", "Tab4", "📋 ISG設定リストア"])
 
+def get_interface_0_0_info(file_content):
+    """
+    アップロードされた内容から 'interface 0:0' から始まる8行を抽出する関数
+    """
+    # 行単位に分割
+    lines = file_content.splitlines()
+    for i, line in enumerate(lines):
+        if line.strip() == "interface 0:0":
+            # 該当行から8行分を取得（存在する場合のみ）
+            return "\n".join(lines[i : i + 8])
+    return "interface 0:0 の情報が見つかりませんでした。"
+
+
 with tab5:  # 5番目のタブを指定
     st.header("📋 ISG設定をリストアする手順")
     
@@ -1364,7 +1377,15 @@ with tab5:  # 5番目のタブを指定
     if st.checkbox("ステップ2: Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     st.write("ステップ3: ネットワーク設定")
     
-    st.code("interface 0:0\n(アップロードファイルの内容を表示)", language="text")
+    if 'up_conf_cust' in locals() and up_conf_cust:
+        # アップロードファイルの内容を取得して関数に渡す
+        content = up_conf_cust.getvalue().decode()
+        interface_info = get_interface_0_0_info(content)
+        st.code(interface_info, language="text")
+    else:
+        st.warning("1ページ目で設定ファイルがアップロードされていません。")
+        
+
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
     st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
