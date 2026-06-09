@@ -1627,7 +1627,18 @@ Enter option: 1
 """, unsafe_allow_html=True)
     st.markdown("---")
     st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
-    st.write("ステップ2: 作成済みコマンドを実行します。")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+
+consoleuser connected from 127.0.0.1 using console on localhost<br>
+localhost&gt; en<br>
+Password:<br>
+localhost#<br>
+
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.write("ステップ2: 作成済みコマンドをターミナルに貼り付けして、実行します。")
     i_command = st.session_state.get('isg_command', '未検出')
     st.code(f"\n{i_command}")   
     st.write("ステップ3: エラー時はSynnexへ連絡します。")
