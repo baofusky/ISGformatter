@@ -1592,7 +1592,7 @@ Enter the license key below and end it with a Ctrl-D
     st.markdown("---")
    
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
-    if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
+    if st.checkbox("ライセンスIDが一致することを確認しました"): st.success("OK")
         
     st.markdown("---")
 
