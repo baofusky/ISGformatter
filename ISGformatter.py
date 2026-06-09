@@ -1420,7 +1420,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ2: 作成済みコマンドを実行します。")
     st.code("（三ページ目で作成された一括表示コマンド）", language="text")
     st.write("ステップ3: エラー時はSynnexへ連絡します。")
-    st.write("ステップ4: リストア後 `show running-config | more` で確認します。")
+    st.write("ステップ4: リストア後 `show running-config | more` で確認し、内容を保存してisg_after_resore.txtとして保存してください。")
     
     uploaded_after = st.file_uploader("リストア後の設定ファイルをアップロード", type=['txt'])
     if uploaded_after:
