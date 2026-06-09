@@ -1619,7 +1619,7 @@ xxxxxxxxx  <None>    <br>
     i_command = st.session_state.get('isg_command', '未検出')
     st.code(f"\n{i_command}")   
     st.write("ステップ3: エラー時はSynnexへ連絡します。")
-    st.write("ステップ4: リストア後 `show running-config | more` で確認し、内容を保存してisg_after_resore.txtとして保存してください。")
+    st.write("ステップ4: リストア後show json-config show running-config | nomore health-monitoring view settings show applications event-log view configuration lag view 発行し、内容を保存してisg_after_resore.txtとして保存してください。")
     
     col_u1, col_u2 = st.columns(2)
     with col_u1:
