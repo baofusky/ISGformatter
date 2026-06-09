@@ -1372,10 +1372,10 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ3: `localhost# installed-systems view` でファームウェアを確認します。")
     st.write("ステップ4: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
     st.write("ステップ5: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。")
-    st.markdown("<span style='color:red'>注:192.168.84.19を実際のMDのIPに替えてくださ</span>", unsafe_allow_html=True)
+    st.markdown("<span style='color:red'>注:192.168.84.19を実際のMDのIPに替えてください</span>", unsafe_allow_html=True)
     st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
-    if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
+    if st.checkbox("バージョンが一致していることを確認しました"): st.success("OK")
 
     os_ver = st.session_state.get('isg_os_version', '未検出')
     model = st.session_state.get('machine_model', '未検出')
