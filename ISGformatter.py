@@ -1433,7 +1433,7 @@ Enter option: 1
     st.markdown("<span style='color:red'>注:192.168.84.19を実際のMDのIPに替えてください</span>", unsafe_allow_html=True)
     st.write("ステップ5: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ6: 再起動後、バージョンの一致を確認します。")
-    if st.checkbox("バージョンが一致していることを確認しました"): st.success("OK")
+   
     st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")           
 
     st.markdown("---")
