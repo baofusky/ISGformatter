@@ -1387,6 +1387,17 @@ with tab5:  # 5番目のタブを指定
     if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     
     st.write("ステップ3: ISGのネットワークを設定する！")
+    
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 2
+</div>
+""", unsafe_allow_html=True)
 
     st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{netwok_a}")   
     
