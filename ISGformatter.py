@@ -1466,7 +1466,23 @@ Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y
 </div>
 """, unsafe_allow_html=True)
 
+ 　 st.markdown("---")
 
+    st.markdown(f"""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.6;">
+You have entered the following IP settings:<br>
+<br>
+IP address: {net_info['ip-address']}<br>
+IP subnet mask: {net_info['networkmask']}<br>
+IP gateway: {net_info['default-gateway']}<br>
+DNS server(s): {net_info['name-server']}<br>
+<br>
+<br>
+Would you like to change any of them? Y/N [No] N
+</div>
+""", unsafe_allow_html=True)
+
+    
     st.markdown("---")
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
