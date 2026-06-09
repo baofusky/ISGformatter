@@ -1420,7 +1420,7 @@ Enter option: 1
 </div>
 """, unsafe_allow_html=True)
     st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
-    if st.checkbox("ステップ8: ネットワーク/ログイン確認が全てOK"): st.success("OK")
+    if st.checkbox("ネットワーク/ログイン確認が全てOK"): st.success("OK")
 
 
     st.markdown("---")
