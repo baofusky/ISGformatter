@@ -100,12 +100,12 @@ def show_custom_area(label, text_value, height, unique_key, download_filename):
 
 
 # タブ構造
-tab1, tab2, tab3, tab4,tab5 = st.tabs([
+tab1, tab2, tab3, tab5,tab4= st.tabs([
     "1ページ目：ISGファイルの読込・整形・コマンド作成", 
     "2ページ目：SGOSファイルの整形",
     "3ページ目：作成コマンドの一括出力",
-    "4ページ目：SGOS情報確認",
-    "5ページ目 ISG設定リストア"
+    "4ページ目 ISG設定リストア"
+    "5ページ目：SGOS情報確認",
 ])
 
 # 一括出力用コマンドの格納辞書を初期化
