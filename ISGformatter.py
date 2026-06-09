@@ -1573,7 +1573,7 @@ Enter option: 1
 """, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンスをペーストし Ctrl+D で終了します。")
+    st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンス開いて内容をコピーして、ターミナルにペーストします。コピーがかんりょうしましたら Ctrl+D で終了します。")
     st.markdown("---")
    
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
