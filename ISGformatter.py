@@ -1367,18 +1367,6 @@ with tab5:  # 5番目のタブを指定
     st.write("・TeraTerm：[設定(S)] - [キーボード(K)] - Backspace キー にチェック")
     st.write("・TeraTerm：[ファイル(F)] - [ログ(L)]（ファイル名：受付 No_日付.txt）")
 
-    st.markdown("---")
-    st.subheader("フェーズ一：同じISGバージョンのインストール")
-    st.write("ステップ1: お客様提供情報のisg_configファイルをアップロードします。")
-    st.write("ステップ2: アップグレードパスとダウングレードパスを確認します。")
-    st.write("ステップ3: `localhost# installed-systems view` でファームウェアを確認します。")
-    st.write("ステップ4: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
-    st.write("ステップ5: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。")
-    st.markdown("<span style='color:red'>注:192.168.84.19を実際のMDのIPに替えてください</span>", unsafe_allow_html=True)
-    st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
-    st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
-    if st.checkbox("バージョンが一致していることを確認しました"): st.success("OK")
-
     os_ver = st.session_state.get('isg_os_version', '未検出')
     model = st.session_state.get('machine_model', '未検出')
     serial = st.session_state.get('serial_number', '未検出') 
@@ -1388,7 +1376,7 @@ with tab5:  # 5番目のタブを指定
     
    
     st.markdown("---")
-    st.subheader("フェーズ二：ISGの設定を行う")
+    st.subheader("フェーズ一：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
     if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
 
@@ -1408,6 +1396,19 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ7: CLIに再ログインし、enableパスワードでのログイン確認を行います。")
     st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
     if st.checkbox("ステップ8: ネットワーク/ログイン確認が全てOK"): st.success("OK")
+
+
+    st.markdown("---")
+    st.subheader("フェーズ二：同じISGバージョンのインストール")
+    st.write("ステップ1: お客様提供情報のisg_configファイルをアップロードします。")
+    st.write("ステップ2: アップグレードパスとダウングレードパスを確認します。")
+    st.write("ステップ3: `localhost# installed-systems view` でファームウェアを確認します。")
+    st.write("ステップ4: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
+    st.write("ステップ5: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。")
+    st.markdown("<span style='color:red'>注:192.168.84.19を実際のMDのIPに替えてください</span>", unsafe_allow_html=True)
+    st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
+    st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
+    if st.checkbox("バージョンが一致していることを確認しました"): st.success("OK")
 
     st.markdown("---")
     st.subheader("フェーズ三：ライセンスのインストール")
