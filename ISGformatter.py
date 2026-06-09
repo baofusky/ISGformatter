@@ -1389,7 +1389,7 @@ with tab5:  # 5番目のタブを指定
 
 
 
-  def extract_network_info(text):
+def extract_network_info(text):
     """
     テキストからネットワーク情報を抽出する。
     テキストが空、または None の場合は初期値の辞書を返して終了する。
