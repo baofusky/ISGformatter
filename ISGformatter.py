@@ -1606,7 +1606,20 @@ ID           Label<br>
 
 </div>
 """, unsafe_allow_html=True)
+    
     st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+localhost# licensing view<br>
+<br>
+auto-update  :  not configured<br>
+ID           Label<br>
+---------   ---------<br>
+xxxxxxxxx  <None><br>
+
+</div>
+""", unsafe_allow_html=True)
+
 
     st.markdown("""
 
