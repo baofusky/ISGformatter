@@ -1614,6 +1614,18 @@ xxxxxxxxx  <None>    <br>
   
     st.markdown("---")
     st.subheader("フェーズ四：ISGconfigのリストア")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
     st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
     st.write("ステップ2: 作成済みコマンドを実行します。")
     i_command = st.session_state.get('isg_command', '未検出')
