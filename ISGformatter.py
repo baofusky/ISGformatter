@@ -668,6 +668,8 @@ localhost(config-local-user-list-local-users)# edit user {user} password
             show_custom_area("ACL設定の内容の表示", acl_raw_section, 250, "acl_raw_detail", "acl_source_detail.txt")
         with col_new_acl2:
             show_custom_area("作成されたACLコマンド", acl_generated_commands, 250, "acl_gen_detail", "acl_commands_detail.txt")
+            
+        all_generated_cmds_dict["acl"] = acl_generated_commands
 
         st.markdown("---")
 
