@@ -1567,53 +1567,11 @@ Appliance Serial Console<br>
 Enter option: 1
 </div>
 """, unsafe_allow_html=True)
+    
     st.markdown("---")
     st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンスをペーストし Ctrl+D で終了します。")
     st.markdown("---")
-    st.markdown("""
-<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
-localhost# licensing inline passphrase synnex<br>
-Enter the license key below and end it with a Ctrl-D
-</div>
-""", unsafe_allow_html=True)
-    st.markdown("---")
-    st.write("ステップ3: ライセンスファイルを開いて、すべての内容をコピーして、シリアルコンソールに貼り付けます。")
-    st.markdown("---")
-    st.markdown("""
-<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
-localhost# licensing inline passphrase synnex<br>
-Enter the license key below and end it with a Ctrl-D
-</div>
-""", unsafe_allow_html=True)
-
-# ライセンスキー部分はコードブロックとして表示すると読みやすくなります
-st.code("""
-kb2FkKKePLSh2ToPiOA13IrXjKFTqgON6H9Iu2s3IchmtyMwOCm3t+tPvTRqBN5JY7TLaBC4VmIp
-gCtxqOmll1rirmpEjADnceqnGldaHfjeE3kdFLqPJt7gYn3x/P1DyTH8HYhzukp1GBsy6gGsF33Q
-kCz82vbZM7YD7ftPax26jXjGIMG/0Q7HtmSCro8aITLvdfyY/5op6EBjXcTpxPznybnl3rez4MGu
-fEi8IvV3RgYm4whBCHkPByEh5bbVN3V5HsgAJsDLTRgO56eiMi6JIJCNoG09xP6EGT7Pz64E3oKF
-8YwTJSSC8Jtrj0CAbNcYZEs60xIvKmiuwOj3MDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9
-IlVTLUFTQ0lJIj8+CjxCbHVlY29hdExpY2Vuc2VLZXkgeG1sbnM6eHNpPSJodHRwOi8vd3d3Lncz
-Lm9yZy8yMDAxL1hNTFNjaGVtYS1pbnN0YW5jZSIgeHNpOm5vTmFtZXNwYWNlU2NoZW1hTG9jYXRp
-b249ImxpY2Vuc2Vfc2NoZW1hLnhzZCI+CjxDbGllbnRDZXJ0aWZpY2F0ZT4tLS0tLUJFR0lOIENF
-UlRJRklDQVRFLS0tLS0KTUlJRlV6Q0NCRHVnQXdJQkFnSVFCMTczSXNMWStrM3EzK1hvbXdSZzBU
-QU5CZ2txaGtpRzl3MEJBUXNGQURDQgpnVEVMTUFrR0ExVUVCaE1DVlZNeElEQWVCZ05WQkFvVEYw
-SnNkV1VnUTI5aGRDQlRlWE4wWlcxekxDQkpibU11Ck1SUXdFZ1lEVlFRTEV3dEZibWRwYm1WbGNt
-bHVaekU2TURnR0ExVUVBeE14UW14MVpTQkRiMkYwSUZONWMzUmwKYlhNZ1RHbGpaVzV6WlNCVGFX
-ZHVhVzVuSUVsdWRHVnliV1ZrYVdGMFpTQkRRVEFlRncweU1qQTFNalV3TURBdwpNREJhRncweU56
-QTFNalF5TXpVNU5UbGFNSUd0TVFzd0NRWURWUVFHRXdKVlV6RVRNQkVHQTFVRUNBd0tRMkZzCmFX
-WnZjbTVwWVRFUk1BOEdBMVVFQnd3SVUyRnVJRXB2YzJVeElEQWVCZ05WQkFvTUYwSnNkV1VnUTI5
-aGRDQlQKZVhOMFpXMXpMQ0JKYm1NdU1SUXdFZ1lEVlFRTERBdEZibWRwYm1WbGNtbHVaekUrTUR3
-R0ExVUVBd3cxUW14MQpaU0JEYjJGMElGTjVjM1JsYlhNZ1UzVnVibmwyWVd4bElFeHBZMlZ1YzJV
-Z1UybG5ibWx1WnlCQmRYUm9iM0pwCmRIa3dnZ0VpTUEwR0NTcUdTSWIzRFFFQkFRVUFBNElCRHdB
-d2dnRUtBb0lCQVFEem5lZkw3Qk5TT3JJQy9WZFEKa0lyZzhydVkxTXBqanR3aU4xeUZjRVk3cC9Q
-VGVEMDFYYmRNa1pYeE95Q0tLOGVtbGdLNHRiNW80ZVgrSWFvNQpQUUVldUkvZlFKd0dzbDRSdEIw
-M3Q4SDhjR1ZiRGZGM2NYTytoK0xzczJrbVpsYVlJa1h5OXJ3WTRRZkZKNnBtCjhIYWdnN3l6Y1NY
-Y3pTc0FtQlp2cGN6Wmh5ZlhtR2Y4UkcrbnBXSXJoU3B6Mm9pbkl3L2dlWXZ0TmlXb2l6eXYKbHRK
-N0lwYjk4UHNwQW1GWmQvUWN1dTlSa1d3eG5SV052dVdkQWhCeFBwZVNEeCtPWUt1Tng3L2JnYU9t
-QnhTbwovWGM0K2lKL29WV3JDdm1WY1lPTnFLTWVaRm1xY3BBTnJhcWgwZDhaZ3I0b0RweHIwZnlv
-""", language=None)
-
+   
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
     if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
 
