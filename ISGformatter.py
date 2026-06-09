@@ -1584,10 +1584,39 @@ localhost# licensing inline passphrase synnex<br>
 Enter the license key below and end it with a Ctrl-D
 </div>
 """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    st.markdown("""
+UHJvZHVjdERlc2NyaXB0aW9uPgo8UGFydE51bWJlcj5JU0ctUFItQURWLVNVQjwvUGFydE51bWJl
+cj4KPENvbXBvbmVudE5hbWU+RW5jcnlwdGVkIFRhcDwvQ29tcG9uZW50TmFtZT4KPEFjdGl2YXRp
+b25EYXRlPjIwMjYtMDMtMDY8L0FjdGl2YXRpb25EYXRlPgo8RXhwaXJhdGlvbkRhdGU+MjAyNi0w
+Ny0wMzwvRXhwaXJhdGlvbkRhdGU+CjxFeHBpcmF0aW9uVHlwZT5TdWJzY3JpcHRpb248L0V4cGly
+YXRpb25UeXBlPgoKPC9MaWNlbnNhYmxlQ29tcG9uZW50Pgo8L0JsdWVjb2F0TGljZW5zZUtleT4K
+Cg==
+
+License update was successful for license ID 0090992501 (Model: SG-Enterprise)
+
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
    
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
     if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
+        
+    st.markdown("---")    
+    st.markdown("""
 
+localhost# licensing view
+auto-update  :  not configured
+
+ID          Label
+---------   ---------
+xxxxxxxxxx  <None>
+
+localhost#
+</div>
+""", unsafe_allow_html=True)    
     st.markdown("---")
     st.subheader("フェーズ四：ISGconfigのリストア")
     st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
