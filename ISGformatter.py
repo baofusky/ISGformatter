@@ -1371,7 +1371,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ2: アップグレードパスとダウングレードパスを確認します。")
     st.write("ステップ3: `localhost# installed-systems view` でファームウェアを確認します。")
     st.write("ステップ4: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
-    st.write("ステップ5: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。\n注:192.168.84.19を実際のMDのIPに替えてください")
+    st.write("ステップ5: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。"\n+"注:192.168.84.19を実際のMDのIPに替えてください")
     st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("ステップ7: バージョンが一致していることを確認しました"): st.success("OK")
