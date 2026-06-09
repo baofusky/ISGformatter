@@ -1399,6 +1399,30 @@ Enter option: 2
 </div>
 """, unsafe_allow_html=True)
 
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+Welcome to the Symantec S210 Series Appliance Setup console.<br>
+<br>
+-------------------------- (page 1 of 3) --------------------------<br>
+<br>
+Press &lt;CTRL-C&gt; to exit the Initial configuration wizard at any time<br>
+<br>
+Please enter the network configuration for the S210 Appliance<br>
+The following interfaces are available for configuration:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 0:0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 1:0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 2:0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 2:1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. 2:2<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. 2:3<br>
+<br>
+<br>
+Enter interface number to configure [1]: DHCP is enabled on this interface but no IP address is assigned yet.<br>
+DHCP may only be enabled on one interface at a time.<br>
+Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y/N [No] N
+</div>
+""", unsafe_allow_html=True)
+
     st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{netwok_a}")   
     
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
