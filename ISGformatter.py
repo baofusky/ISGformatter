@@ -7,7 +7,7 @@ if 'isg_info' not in st.session_state:
         "isg_os_version": "",
         "machine_model": "",
         "serial_number": "",
-        "m=network_info": ""
+        "m_network_info": ""
     }
 
 # ページ設定
@@ -274,7 +274,7 @@ localhost(config-local-user-list-local-users)# edit user {user} password
         if network_info_lines:
             network_info_text = "\n".join(network_info_lines)
             show_custom_area("DNS/ネットワーク設定 (12行)", network_info_text, 250, "network_info", "network_info.txt")
-            st.session_state.network_info_text = network_info_text
+            st.session_state.m_network_info = network_info_text
         else:
             st.info("ネットワーク情報（dns name-serverから始まる設定）は見つかりませんでした。")
 
@@ -1379,7 +1379,7 @@ with tab5:  # 5番目のタブを指定
     os_ver = st.session_state.get('isg_os_version', '未検出')
     model = st.session_state.get('machine_model', '未検出')
     serial = st.session_state.get('serial_number', '未検出') 
-    netwok_a = st.session_state.get('network_info_text', '未検出')
+    netwok_a = st.session_state.get('m_network_info', '未検出')
     
     st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")       
     
@@ -1396,6 +1396,8 @@ with tab5:  # 5番目のタブを指定
     if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     
     st.write("ステップ3: ISGのネットワークを設定する！")
+
+    st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :{netwok_a}")   
     
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
