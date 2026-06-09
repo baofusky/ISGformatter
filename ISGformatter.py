@@ -1242,42 +1242,7 @@ with tab4:  # 5番目のタブを指定
     st.write("■二本の電源ケーブルを接続します。")
     st.write("■シリアルコンソールに接続します。")
 
-    st.markdown("""
-    <style>
-    .yellow-box {
-        background-color: #fffde7;
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #fbc02d;
-        color: #333;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-
-   st.markdown("""
-<div class="yellow-box">
-    <h3>⚙️ TeraTerm 設定手順</h3>
-    
-    <b>1. シリアルポート設定</b><br>
-    <ul>
-        <li>ポート：COMx (MD の環境に合わせて選択)</li>
-        <li>スピード：9600</li>
-        <li>データ：8 bit</li>
-        <li>パリティ：none</li>
-        <li>ストップビット：1 bit</li>
-        <li>フロー制御：none</li>
-    </ul>
-    
-    <b>2. TeraTerm 操作</b>
-    <ul>
-        <li><code>[設定(S)]</code> - <code>[キーボード(K)]</code>：<b>Backspace キー</b> にチェック</li>
-        <li><code>[ファイル(F)]</code> - <code>[ログ(L)]</code>：ファイル名を「受付No_日付.txt」で保存</li>
-    </ul>
-</div>
-""", unsafe_allow_html=True)
-
-    
+     
     st.write("■お客様提供情報のisg_configファイルをこのサイトの上部にアップロードします。")
 
     os_ver = st.session_state.get('isg_os_version', '未検出')
