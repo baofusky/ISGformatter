@@ -1576,7 +1576,7 @@ Enter option: 1
     st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンス開いて内容をコピーして、ターミナルにペーストします。コピーが完了したら Ctrl+D で終了します。")
     st.markdown("---")
     st.markdown("""
-Markdown
+
 <div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
 localhost&gt; en<br>
 Password:<br>
