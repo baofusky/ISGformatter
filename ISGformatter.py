@@ -1372,7 +1372,7 @@ with tab5:  # 5番目のタブを指定
     serial = st.session_state.get('serial_number', '未検出') 
     netwok_a = st.session_state.get('m_network_info', '未検出')
     
-    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")       
+
     
    
     st.markdown("---")
@@ -1409,6 +1409,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ6: `localhost# installed-systems default [番号]` でバージョンを指定します。")
     st.write("ステップ7: 再起動後、バージョンの一致を確認します。")
     if st.checkbox("バージョンが一致していることを確認しました"): st.success("OK")
+    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")           
 
     st.markdown("---")
     st.subheader("フェーズ三：ライセンスのインストール")
