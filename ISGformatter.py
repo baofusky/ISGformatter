@@ -1428,7 +1428,7 @@ Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y
 """, unsafe_allow_html=True)
 
 
-    
+    st.markdown("---")
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
     st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
