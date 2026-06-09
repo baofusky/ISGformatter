@@ -1426,7 +1426,9 @@ with tab5:  # 5番目のタブを指定
         info["networkmask"] = match_ip_mask.group(2)
         
      return info
-    info = extract_network_info(st.session_state.m_network_info)
+        
+    m_info = st.session_state.get("m_network_info", "")
+    net_info = extract_network_info(m_info)
     
     st.write("ステップ3: ISGのネットワークを設定する！")
     
