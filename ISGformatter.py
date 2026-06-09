@@ -1388,6 +1388,8 @@ with tab5:  # 5番目のタブを指定
     
     st.write("ステップ3: ISGのネットワークを設定する！")
     
+    st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{netwok_a}")   
+    
     st.markdown("""
 <div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
 Appliance Serial Console<br>
@@ -1399,6 +1401,8 @@ Enter option: 2
 </div>
 """, unsafe_allow_html=True)
 
+    st.markdown("---")
+    
     st.markdown("""
 <div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
 Welcome to the Symantec S210 Series Appliance Setup console.<br>
