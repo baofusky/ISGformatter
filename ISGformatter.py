@@ -1274,7 +1274,7 @@ with tab4:  # 5番目のタブを指定
 </div>
 """, unsafe_allow_html=True)
 
-     
+    st.markdown("---") 
     st.write("■お客様提供情報のisg_configファイルをこのサイトの上部にアップロードします。")
 
     os_ver = st.session_state.get('isg_os_version', '未検出')
