@@ -1556,6 +1556,18 @@ Enter option: 1
     st.markdown("---")
     st.subheader("フェーズ三：ライセンスのインストール")
     st.write("ステップ1: CLIでenableパスワードでログインします。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
     st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンスをペーストし Ctrl+D で終了します。")
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
     if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
