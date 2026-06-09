@@ -1588,17 +1588,18 @@ Enter the license key below and end it with a Ctrl-D
     st.markdown("---")
     
     st.markdown("""
-UHJvZHVjdERlc2NyaXB0aW9uPgo8UGFydE51bWJlcj5JU0ctUFItQURWLVNVQjwvUGFydE51bWJl
-cj4KPENvbXBvbmVudE5hbWU+RW5jcnlwdGVkIFRhcDwvQ29tcG9uZW50TmFtZT4KPEFjdGl2YXRp
-b25EYXRlPjIwMjYtMDMtMDY8L0FjdGl2YXRpb25EYXRlPgo8RXhwaXJhdGlvbkRhdGU+MjAyNi0w
-Ny0wMzwvRXhwaXJhdGlvbkRhdGU+CjxFeHBpcmF0aW9uVHlwZT5TdWJzY3JpcHRpb248L0V4cGly
-YXRpb25UeXBlPgoKPC9MaWNlbnNhYmxlQ29tcG9uZW50Pgo8L0JsdWVjb2F0TGljZW5zZUtleT4K
-Cg==
-
-License update was successful for license ID 0090992501 (Model: SG-Enterprise)
-
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+License update was successful for license ID 0090992501 (Model: SG-Enterprise)<br>
+<br>
+--- Decoded License Component ---<br>
+PartNumber: ISG-PR-ADV-SUB<br>
+ComponentName: Encrypted Tap<br>
+ActivationDate: 2026-03-06<br>
+ExpirationDate: 2026-07-03<br>
+ExpirationType: Subscription
 </div>
 """, unsafe_allow_html=True)
+    
     st.markdown("---")
    
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
