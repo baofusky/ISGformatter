@@ -1389,36 +1389,36 @@ with tab5:  # 5番目のタブを指定
 
 
 
-def extract_network_info(text):
-    """
-    st.session_state.m_network_info からネットワーク設定値を抽出する関数
-    """
-    info = {
+    def extract_network_info(text):
+     """
+     st.session_state.m_network_info からネットワーク設定値を抽出する関数
+     """
+     info = {
         "name-server": None,
         "default-gateway": None,
         "interface": None,
         "ip-address": None,
         "networkmask": None
-    }
+     }
     
-    # 1. DNS Name Server
-    match_dns = re.search(r'dns name-server\s+(\d+\.\d+\.\d+\.\d+)', text)
-    if match_dns:
+     # 1. DNS Name Server
+     match_dns = re.search(r'dns name-server\s+(\d+\.\d+\.\d+\.\d+)', text)
+     if match_dns:
         info["name-server"] = match_dns.group(1)
         
-    # 2. Default Gateway
-    match_gw = re.search(r'ip default-gateway\s+(\d+\.\d+\.\d+\.\d+)', text)
-    if match_gw:
+     # 2. Default Gateway
+     match_gw = re.search(r'ip default-gateway\s+(\d+\.\d+\.\d+\.\d+)', text)
+     if match_gw:
         info["default-gateway"] = match_gw.group(1)
         
-    # 3. Interface (例: 0:0)
-    match_int = re.search(r'interface\s+([\d:]+)', text)
-    if match_int:
+     # 3. Interface (例: 0:0)
+     match_int = re.search(r'interface\s+([\d:]+)', text)
+     if match_int:
         info["interface"] = match_int.group(1)
         
-    # 4. IP Address と Network Mask
-    match_ip_mask = re.search(r'ip-address\s+(\d+\.\d+\.\d+\.\d+)\s+(\d+\.\d+\.\d+\.\d+)', text)
-    if match_ip_mask:
+     # 4. IP Address と Network Mask
+     match_ip_mask = re.search(r'ip-address\s+(\d+\.\d+\.\d+\.\d+)\s+(\d+\.\d+\.\d+\.\d+)', text)
+     if match_ip_mask:
         info["ip-address"] = match_ip_mask.group(1)
         info["networkmask"] = match_ip_mask.group(2)
         
