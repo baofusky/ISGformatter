@@ -1424,20 +1424,41 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ3: エラー時はSynnexへ連絡します。")
     st.write("ステップ4: リストア後 `show running-config | more` で確認し、内容を保存してisg_after_resore.txtとして保存してください。")
     
-    uploaded_after = st.file_uploader("リストア後の設定ファイルをアップロード", type=['txt'])
-    if uploaded_after:
-        content = uploaded_after.getvalue().decode()
-        # agent enabled から health-monitoring view settings の上の行までを抽出
-        pattern = r'(agent enabled.*?)(?=health-monitoring view settings)'
-        match = re.search(pattern, content, re.DOTALL)
-        if match:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("今回リストア後の設定")
-                st.code(match.group(1), language="text")
-            with col2:
-                st.write("比較元（1ページ目のACL抜き取り後の内容）")
-                st.code("（ACL抜き取り後の設定）", language="text")
-                st.warning("不一致内容を表示")
-        else:
-            st.error("設定内容が抽出できませんでした")
+    col_u1, col_u2 = st.columns(2)
+    with col_u1:
+        file_cust = st.file_uploader("顧客提供ISG設定ファイル", type=["txt", "conf"], key="cust_diff")
+    with col_u2:
+        file_rest = st.file_uploader("リストア後ISG設定ファイル", type=["txt", "conf"], key="rest_diff")
+
+    def clean_config(text):
+        # "aaa authentication users user admin" から "agent enabled" の直前までを除去
+        # re.DOTALLで改行を含め、先読み (?=agent enabled) を利用して安全に範囲指定
+        pattern = re.compile(r'aaa authentication users user admin[\s\S]*?(?=agent enabled)', re.MULTILINE)
+        return pattern.sub('', text).strip()
+
+    if file_cust and file_rest:
+        content_cust = clean_config(file_cust.getvalue().decode("utf-8"))
+        content_rest = clean_config(file_rest.getvalue().decode("utf-8"))
+        
+        c1, c2, c3 = st.columns(3)
+        
+        with c1:
+            st.subheader("顧客提供ISG (除去後)")
+            st.code(content_cust)
+            
+        with c2:
+            st.subheader("リストア後ISG (除去後)")
+            st.code(content_rest)
+            
+        with c3:
+            st.subheader("差異表示")
+            diff = list(difflib.ndiff(content_cust.splitlines(), content_rest.splitlines()))
+            # '+' や '-' で始まる行（差異）を抽出
+            diff_lines = [line for line in diff if line.startswith('+ ') or line.startswith('- ')]
+            
+            if not diff_lines:
+                st.success("内容は同じです。")
+            else:
+                st.code("\n".join(diff))
+    else:
+        st.info("比較のため、両方のファイルをアップロードしてください。")
