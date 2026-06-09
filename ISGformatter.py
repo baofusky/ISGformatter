@@ -1472,10 +1472,10 @@ Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y
 <div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.6;">
 You have entered the following IP settings:<br>
 <br>
-IP address: {net_info['ip-address']}<br>
-IP subnet mask: {net_info['networkmask']}<br>
-IP gateway: {net_info['default-gateway']}<br>
-DNS server(s): {net_info['name-server']}<br>
+IP address: {info['ip-address']}<br>
+IP subnet mask: {info['networkmask']}<br>
+IP gateway: {info['default-gateway']}<br>
+DNS server(s): {info['name-server']}<br>
 <br>
 <br>
 Would you like to change any of them? Y/N [No] N
