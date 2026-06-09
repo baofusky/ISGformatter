@@ -1721,7 +1721,6 @@ with tab5:
     st.markdown("---")
     st.subheader("フェーズ一：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
-    if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
 
     m_model = st.session_state.get('machine_mode', '未検出')
     s_number = st.session_state.get('serial_numbe', '未検出')
