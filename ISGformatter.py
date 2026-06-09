@@ -1387,15 +1387,19 @@ with tab5:  # 5番目のタブを指定
     if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
 
 
-　def extract_network_info(text):
 
+
+def extract_network_info(text):
+    """
+    st.session_state.m_network_info からネットワーク設定値を抽出する関数
+    """
     info = {
         "name-server": None,
         "default-gateway": None,
         "interface": None,
         "ip-address": None,
         "networkmask": None
-    　}
+    }
     
     # 1. DNS Name Server
     match_dns = re.search(r'dns name-server\s+(\d+\.\d+\.\d+\.\d+)', text)
@@ -1413,7 +1417,6 @@ with tab5:  # 5番目のタブを指定
         info["interface"] = match_int.group(1)
         
     # 4. IP Address と Network Mask
-    # ip-address の後に IP と マスクが続いている場合を想定
     match_ip_mask = re.search(r'ip-address\s+(\d+\.\d+\.\d+\.\d+)\s+(\d+\.\d+\.\d+\.\d+)', text)
     if match_ip_mask:
         info["ip-address"] = match_ip_mask.group(1)
