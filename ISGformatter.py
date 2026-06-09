@@ -1241,6 +1241,17 @@ with tab4:  # 5番目のタブを指定
     st.markdown("### 準備作業")
     st.write("■二本の電源ケーブルを接続します。")
     st.write("■シリアルコンソールに接続します。")
+    st.markdown("""
+    <style>
+    .yellow-box {
+        background-color: #fffde7;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #fbc02d;
+        color: #333;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
      
     st.write("■お客様提供情報のisg_configファイルをこのサイトの上部にアップロードします。")
