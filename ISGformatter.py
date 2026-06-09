@@ -1621,9 +1621,7 @@ xxxxxxxxx  <None><br>
 """, unsafe_allow_html=True)
 
 
-    st.markdown("""
-
-   
+  
     st.markdown("---")
     st.subheader("フェーズ四：ISGconfigのリストア")
     st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
