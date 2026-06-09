@@ -1484,8 +1484,27 @@ Would you like to change any of them? Y/N [No] N
 
     
     st.markdown("---")
-    st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
-    st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
+
+    st.write("ステップ4: お客様提供のadmin/enableパスワードを設定します。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+DIRECTIONS:<br>
+<br>
+The console username, password and enable password are special administrative<br>
+credentials which can be used to log in to the command line interface or web<br>
+management interface.<br>
+<br>
+Enter console password:<br>
+Verify console password:<br>
+<br>
+<br>
+Enter enable password:<br>
+Verify enable password:
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.write("ステップ5: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
     st.write("ステップ7: CLIに再ログインし、enableパスワードでのログイン確認を行います。")
     st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
