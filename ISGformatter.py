@@ -1387,7 +1387,7 @@ with tab5:  # 5番目のタブを指定
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
     if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
     
-    st.write("ステップ3: ISGのネットワークを設定する")
+    st.write("ステップ3: ISGのネットワークを設定する！")
     
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
