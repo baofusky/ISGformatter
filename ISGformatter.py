@@ -1605,19 +1605,23 @@ ExpirationType: Subscription
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
     if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
         
-    st.markdown("---")    
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+localhost# licensing view<br>
+<br>
+auto-update  :  not configured<br>
+ID           Label<br>
+---------   ---------<br>
+0090992501  <None><br>
+
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+
     st.markdown("""
 
-localhost# licensing view
-auto-update  :  not configured
-
-ID          Label
----------   ---------
-xxxxxxxxxx  <None>
-
-localhost#
-</div>
-""", unsafe_allow_html=True)    
+   
     st.markdown("---")
     st.subheader("フェーズ四：ISGconfigのリストア")
     st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
