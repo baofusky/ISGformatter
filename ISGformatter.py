@@ -1466,7 +1466,7 @@ Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y
 </div>
 """, unsafe_allow_html=True)
 
- 　 st.markdown("---")
+    st.markdown("---")
 
     st.markdown(f"""
 <div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.6;">
