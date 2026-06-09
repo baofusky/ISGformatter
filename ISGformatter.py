@@ -1422,7 +1422,7 @@ with tab5:  # 5番目のタブを指定
         info["ip-address"] = match_ip_mask.group(1)
         info["networkmask"] = match_ip_mask.group(2)
         
-    return info
+     return info
     info = extract_network_info(st.session_state.m_network_info)
     
     st.write("ステップ3: ISGのネットワークを設定する！")
