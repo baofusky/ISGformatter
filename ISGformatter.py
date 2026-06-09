@@ -7,7 +7,8 @@ if 'isg_info' not in st.session_state:
         "isg_os_version": "",
         "machine_model": "",
         "serial_number": "",
-        "m_network_info": ""
+        "m_network_info": "",
+        "isg_command": ""
     }
 
 # ページ設定
@@ -1202,7 +1203,8 @@ with tab3:
     # SNMPが含まれていない場合にのみ先頭に "conf" を追加
     if all_commands_text and not all_commands_text.strip().startswith("conf"):
         all_commands_text = "conf\n\n" + all_commands_text
-    
+
+    st.session_state.isg_command = all_commands_text
     # 結果を表示
     if all_commands_text:
         show_custom_area("すべての作成済みコマンド一括表示", all_commands_text, 600, "all_cmds", "all_commands.txt")
