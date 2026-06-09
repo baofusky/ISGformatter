@@ -1082,6 +1082,8 @@ localhost(config-local-user-list-local-users)# edit user {user} password
                     continue 
                 if line.lower().startswith("edit user"):
                     continue
+                if line.lower().startswith("edit ccl"):
+                    continue
 
                 if line.lower().startswith("add"):
                     continue
