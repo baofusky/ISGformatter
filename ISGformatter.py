@@ -826,6 +826,8 @@ localhost(config-local-user-list-local-users)# edit user {user} password
         with col_smtp_box2:
             show_custom_area("作成されたSMTPコマンド", smtp_generated_commands, 250, "smtp_gen_detail", "smtp_commands_detail.txt")
 
+        all_generated_cmds_dict["smtp"] = smtp_generated_commands
+
         st.markdown("---")
 
         # --------------------------------------
