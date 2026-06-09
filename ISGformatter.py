@@ -1613,7 +1613,7 @@ Y3pTc0FtQlp2cGN6Wmh5ZlhtR2Y4UkcrbnBXSXJoU3B6Mm9pbkl3L2dlWXZ0TmlXb2l6eXYKbHRK
 N0lwYjk4UHNwQW1GWmQvUWN1dTlSa1d3eG5SV052dVdkQWhCeFBwZVNEeCtPWUt1Tng3L2JnYU9t
 QnhTbwovWGM0K2lKL29WV3JDdm1WY1lPTnFLTWVaRm1xY3BBTnJhcWgwZDhaZ3I0b0RweHIwZnlv
 """, language=None)
-    st.markdown("---")
+
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
     if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
 
