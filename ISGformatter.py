@@ -10,7 +10,6 @@ if 'isg_info' not in st.session_state:
         "m_network_info": "",
         "isg_command": ""
     }
-
 # ページ設定
 st.set_page_config(page_title="ISG 構成・整形ツール", layout="wide")
 st.title("ISG 設定ファイル 解析・生成ツール")
