@@ -1506,6 +1506,23 @@ Verify enable password:
     st.markdown("---")
     st.write("ステップ5: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+DIRECTIONS:<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;When the serial port is secured, access via the serial port must<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;be authenticated using both a setup password and administrative<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;credentials.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A setup password is required to gain access to the Setup Console<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and administrative credentials are required to access the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;command line interface (CLI).<br>
+<br>
+<br>
+Do you want to secure the serial port? Y/N [Yes] N
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
     st.write("ステップ7: CLIに再ログインし、enableパスワードでのログイン確認を行います。")
     st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
     if st.checkbox("ステップ8: ネットワーク/ログイン確認が全てOK"): st.success("OK")
