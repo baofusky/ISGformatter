@@ -1573,8 +1573,17 @@ Enter option: 1
 """, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンス開いて内容をコピーして、ターミナルにペーストします。コピーがかんりょうしましたら Ctrl+D で終了します。")
+    st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンス開いて内容をコピーして、ターミナルにペーストします。コピーが完了したら Ctrl+D で終了します。")
     st.markdown("---")
+    st.markdown("""
+Markdown
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+localhost&gt; en<br>
+Password:<br>
+localhost# licensing inline passphrase synnex<br>
+Enter the license key below and end it with a Ctrl-D
+</div>
+""", unsafe_allow_html=True)
    
     st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
     if st.checkbox("ステップ3: ライセンスIDが一致することを確認しました"): st.success("OK")
