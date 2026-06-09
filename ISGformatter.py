@@ -1387,17 +1387,15 @@ with tab5:  # 5番目のタブを指定
     if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
 
 
-    def extract_network_info(text):
-    """
-    st.session_state.m_network_info からネットワーク設定値を抽出する関数
-    """
+　def extract_network_info(text):
+
     info = {
         "name-server": None,
         "default-gateway": None,
         "interface": None,
         "ip-address": None,
         "networkmask": None
-    }
+    　}
     
     # 1. DNS Name Server
     match_dns = re.search(r'dns name-server\s+(\d+\.\d+\.\d+\.\d+)', text)
