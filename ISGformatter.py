@@ -1524,6 +1524,17 @@ Do you want to secure the serial port? Y/N [Yes] N
 """, unsafe_allow_html=True)
     st.markdown("---")
     st.write("ステップ7: CLIに再ログインし、enableパスワードでのログイン確認を行います。")
+    st.markdown("---")
+        st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)
     st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
     if st.checkbox("ステップ8: ネットワーク/ログイン確認が全てOK"): st.success("OK")
 
