@@ -2,6 +2,14 @@ import streamlit as st
 import re
 import json
 
+if 'isg_info' not in st.session_state:
+    st.session_state['isg_info'] = {
+        "isg_os_version": "",
+        "machine_model": "",
+        "serial_number": "",
+        "m=network_info": ""
+    }
+
 # ページ設定
 st.set_page_config(page_title="ISG 構成・整形ツール", layout="wide")
 st.title("ISG 設定ファイル 解析・生成ツール")
