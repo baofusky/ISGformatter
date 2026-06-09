@@ -1256,21 +1256,21 @@ with tab4:  # 5番目のタブを指定
 <div class="yellow-box">
     <h3>⚙️ TeraTerm 設定手順</h3>
     
-    <b>1. シリアルポート設定</b><br>
-    <ul>
-        <li>ポート：COMx (MD の環境に合わせて選択)</li>
-        <li>スピード：9600</li>
-        <li>データ：8 bit</li>
-        <li>パリティ：none</li>
-        <li>ストップビット：1 bit</li>
-        <li>フロー制御：none</li>
-    </ul>
+    1. シリアルポート設定
     
-    <b>2. TeraTerm 操作</b>
-    <ul>
-        <li><code>[設定(S)]</code> - <code>[キーボード(K)]</code>：<b>Backspace キー</b> にチェック</li>
-        <li><code>[ファイル(F)]</code> - <code>[ログ(L)]</code>：ファイル名を「受付No_日付.txt」で保存</li>
-    </ul>
+        ポート：COMx (MD の環境に合わせて選択)
+        スピード：9600
+        データ：8 bit
+        パリティ：none
+        ストップビット：1 bit
+        フロー制御：none
+   
+    
+    2. TeraTerm 操作
+    
+        [設定(S)] <[キーボード(K)]：Backspace キーにチェック
+        [ファイル(F)] - <code>[ログ(L)]：ファイル名を「受付No_日付.txt」で保存
+
 </div>
 """, unsafe_allow_html=True)
 
