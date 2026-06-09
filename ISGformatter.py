@@ -1427,7 +1427,7 @@ Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y
 </div>
 """, unsafe_allow_html=True)
 
-    st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{netwok_a}")   
+
     
     st.write("ステップ4: MDのネットワークもISGと同じネットワークのIPで設定します。")
     st.write("ステップ5: お客様提供のadmin/enableパスワードを設定します。")
