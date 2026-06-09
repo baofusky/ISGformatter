@@ -1587,18 +1587,7 @@ Enter the license key below and end it with a Ctrl-D
     
     st.markdown("---")
     
-    st.markdown("""
-<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
-License update was successful for license ID xxxxx (Model: SG-Enterprise)<br>
-<br>
---- Decoded License Component ---<br>
-PartNumber: ISG-PR-ADV-SUB<br>
-ComponentName: Encrypted Tap<br>
-ActivationDate: xxxxxxxxxx<br>
-ExpirationDate: xxxxxxxxxx<br>
-ExpirationType: Subscription
-</div>
-""", unsafe_allow_html=True)
+
     
     st.markdown("---")
    
