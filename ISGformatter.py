@@ -1300,6 +1300,15 @@ Enter option: 1
 </div>
 """, unsafe_allow_html=True)   
     st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+localhost> en<br>
+Password:<br>
+localhost> show show json-config <br>
+
+</div>
+""", unsafe_allow_html=True)   
+    st.markdown("---")
     if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
 
     m_model = st.session_state.get('machine_mode', '未検出')
