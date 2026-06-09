@@ -1315,6 +1315,15 @@ localhost> show show json-config <br>
     s_number = st.session_state.get('serial_numbe', '未検出')
     st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{model}\nシリアル番号:{serial}")  
     st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+
+localhost>health-monitoring view current<br>
+
+</div>
+""", unsafe_allow_html=True)   
+    st.markdown("---")
     if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
 
 
