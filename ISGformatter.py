@@ -1420,7 +1420,8 @@ with tab5:  # 5番目のタブを指定
     st.subheader("フェーズ四：ISGconfigのリストア")
     st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
     st.write("ステップ2: 作成済みコマンドを実行します。")
-    st.code("（三ページ目で作成された一括表示コマンド）", language="text")
+    i_command = st.session_state.get('isg_command', '未検出')
+    st.code(f"実行するコマンドは :\n{i_command}")   
     st.write("ステップ3: エラー時はSynnexへ連絡します。")
     st.write("ステップ4: リストア後 `show running-config | more` で確認し、内容を保存してisg_after_resore.txtとして保存してください。")
     
