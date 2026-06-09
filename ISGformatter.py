@@ -1288,6 +1288,18 @@ with tab4:  # 5番目のタブを指定
     st.markdown("---")
     st.subheader("フェーズ一：ISGの設定を行う")
     st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)   
+    st.markdown("---")
     if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
 
     m_model = st.session_state.get('machine_mode', '未検出')
