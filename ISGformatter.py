@@ -1428,11 +1428,11 @@ with tab5:  # 5番目のタブを指定
      return info
         
     m_info = st.session_state.get("m_network_info", "")
-    net_info = extract_network_info(m_info)
+    info = extract_network_info(m_info)
     
     st.write("ステップ3: ISGのネットワークを設定する！")
     
-    st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{net_info["ip-address"]}\n{net_info["networkmask"]}\n{net_info["default-gateway"]}\n{net_info["name-server"]}")   
+    st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{info["ip-address"]}\n{info["networkmask"]}\n{info["default-gateway"]}\n{info["name-server"]}")   
     
     st.markdown("""
 <div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
