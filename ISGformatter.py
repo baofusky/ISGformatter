@@ -1703,3 +1703,299 @@ with tab5:
             show_custom_area("不一致箇所", "\n".join(list(diff)), 300, "diff", "diff.txt")
         else: st.success("一致しています")
            
+    st.markdown("### 準備作業")
+    st.write("お客様提供情報のisg_configファイルをこのサイトの上部にアップロードします。")
+    st.markdown("・ポート COMx (MD の環境に合わせて選択)")
+    st.markdown("・スピード 9600, データ 8 bit, パリティ none, ストップビット 1 bit, フロー制御 none")
+    st.write("・TeraTerm：[設定(S)] - [キーボード(K)] - Backspace キー にチェック")
+    st.write("・TeraTerm：[ファイル(F)] - [ログ(L)]（ファイル名：受付 No_日付.txt）")
+
+    os_ver = st.session_state.get('isg_os_version', '未検出')
+    model = st.session_state.get('machine_model', '未検出')
+    serial = st.session_state.get('serial_number', '未検出') 
+    netwok_a = st.session_state.get('m_network_info', '未検出')
+    
+
+    
+   
+    st.markdown("---")
+    st.subheader("フェーズ一：ISGの設定を行う")
+    st.write("ステップ1: Command Line Interfaceに入り `show json-config` でシリアル/モデルを確認します。")
+    if st.checkbox("ステップ1: シリアルとモデル番号が一致しました"): st.success("OK")
+
+    m_model = st.session_state.get('machine_mode', '未検出')
+    s_number = st.session_state.get('serial_numbe', '未検出')
+    st.code(f"お客様から提供されたファイルから特定したのISGOSのシリアル番号とモデルは:マシンモデル:{model}\nシリアル番号:{serial}")  
+    st.write("ステップ2: `health-monitoring view current` でステータス確認します。")
+    if st.checkbox(" Appliance Certificate Validation以外のステータスが全てOK"): st.success("OK")
+
+
+
+    def extract_network_info(text):
+     """
+     テキストからネットワーク情報を抽出する。
+     テキストが空、または None の場合は初期値の辞書を返して終了する。
+     """
+     # 初期値（すべて None）
+     info = {
+        "name-server": None,
+        "default-gateway": None,
+        "interface": None,
+        "ip-address": None,
+        "networkmask": None
+     }
+    
+     # text が None または空文字の場合はここで処理を終了して初期値を返す
+     if not text:
+        return info
+    
+     # 以下、抽出処理
+     match_dns = re.search(r'dns name-server\s+(\d+\.\d+\.\d+\.\d+)', text)
+     if match_dns:
+        info["name-server"] = match_dns.group(1)
+        
+     match_gw = re.search(r'ip default-gateway\s+(\d+\.\d+\.\d+\.\d+)', text)
+     if match_gw:
+        info["default-gateway"] = match_gw.group(1)
+        
+     match_int = re.search(r'interface\s+([\d:]+)', text)
+     if match_int:
+        info["interface"] = match_int.group(1)
+        
+     match_ip_mask = re.search(r'ip-address\s+(\d+\.\d+\.\d+\.\d+)\s+(\d+\.\d+\.\d+\.\d+)', text)
+     if match_ip_mask:
+        info["ip-address"] = match_ip_mask.group(1)
+        info["networkmask"] = match_ip_mask.group(2)
+        
+     return info
+        
+    m_info = st.session_state.get("m_network_info", "")
+    info = extract_network_info(m_info)
+    
+    st.write("ステップ3: ISGのネットワークを設定する！")
+    
+    st.code(f"お客様から提供されたファイルから特定したネットワーク情報は :\n{info["ip-address"]}\n{info["networkmask"]}\n{info["default-gateway"]}\n{info["name-server"]}")   
+    
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 2
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("---")
+    
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+Welcome to the Symantec S210 Series Appliance Setup console.<br>
+<br>
+-------------------------- (page 1 of 3) --------------------------<br>
+<br>
+Press &lt;CTRL-C&gt; to exit the Initial configuration wizard at any time<br>
+<br>
+Please enter the network configuration for the S210 Appliance<br>
+The following interfaces are available for configuration:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. 0:0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. 1:0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3. 2:0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;4. 2:1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5. 2:2<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;6. 2:3<br>
+<br>
+<br>
+Enter interface number to configure [1]: DHCP is enabled on this interface but no IP address is assigned yet.<br>
+DHCP may only be enabled on one interface at a time.<br>
+Continue with DHCP for IP address, gateway, and DNS settings on interface 0:0? Y/N [No] N
+</div>
+""", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    st.markdown(f"""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.6;">
+You have entered the following IP settings:<br>
+<br>
+IP address: {info['ip-address']}<br>
+IP subnet mask: {info['networkmask']}<br>
+IP gateway: {info['default-gateway']}<br>
+DNS server(s): {info['name-server']}<br>
+<br>
+<br>
+Would you like to change any of them? Y/N [No] N
+</div>
+""", unsafe_allow_html=True)
+
+    
+    st.markdown("---")
+
+    st.write("ステップ4: お客様提供のadmin/enableパスワードを設定します。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+DIRECTIONS:<br>
+<br>
+The console username, password and enable password are special administrative<br>
+credentials which can be used to log in to the command line interface or web<br>
+management interface.<br>
+<br>
+Enter console password:<br>
+Verify console password:<br>
+<br>
+<br>
+Enter enable password:<br>
+Verify enable password:
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.write("ステップ5: MDのネットワークもISGと同じネットワークのIPで設定します。")
+    st.markdown("<span style='color:red'>ステップ6: Do you want to secure the serial port? -> かならず N で入れてください</span>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+DIRECTIONS:<br>
+<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;When the serial port is secured, access via the serial port must<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;be authenticated using both a setup password and administrative<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;credentials.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A setup password is required to gain access to the Setup Console<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and administrative credentials are required to access the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;command line interface (CLI).<br>
+<br>
+<br>
+Do you want to secure the serial port? Y/N [Yes] N
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.write("ステップ7: CLIに再ログインし、enableパスワードでのログイン確認を行います。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)
+    st.write("ステップ8: MDのネットワークからSSH経由でadminログイン確認を行います。")
+    if st.checkbox("ネットワーク/ログイン確認が全てOK"): st.success("OK")
+
+
+    st.markdown("---")
+    st.subheader("フェーズ二：同じISGバージョンのインストール")
+
+    st.write("ステップ1: アップグレードパスとダウングレードパスを確認します。")
+    st.write("ステップ2: `localhost# installed-systems view` でファームウェアを確認します。")
+    st.write("ステップ3: 必要ファームウェアをダウンロードし、MDのIISサイトに格納します。")
+    st.write("ステップ4: `localhost# installed-systems load http://192.168.84.19/[ファームウェア名]` でロードします。")
+    st.markdown("<span style='color:red'>注:192.168.84.19を実際のMDのIPに替えてください</span>", unsafe_allow_html=True)
+    st.write("ステップ5: `localhost# installed-systems default [番号]` でバージョンを指定します。")
+    st.write("ステップ6: 再起動後、バージョンの一致を確認します。")
+    if st.checkbox("バージョンが一致していることを確認しました"): st.success("OK")
+    st.code(f"お客様から提供されたファイルから特定したのISGOS バージョン :{os_ver}")           
+
+    st.markdown("---")
+    st.subheader("フェーズ三：ライセンスのインストール")
+    st.write("ステップ1: CLIでenableパスワードでログインします。")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.write("ステップ2: `licensing inline passphrase synnex` 実行後、ライセンス開いて内容をコピーして、ターミナルにペーストします。コピーが完了したら Ctrl+D で終了します。")
+    st.markdown("---")
+    st.markdown("""
+
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+localhost&gt; en<br>
+Password:<br>
+localhost# licensing inline passphrase synnex<br>
+Enter the license key below and end it with a Ctrl-D
+</div>
+""", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+
+    
+    st.markdown("---")
+   
+    st.write("ステップ3: `licensing view` でライセンスIDが一致することを確認します。")
+    if st.checkbox("ライセンスIDが一致することを確認しました"): st.success("OK")
+        
+    st.markdown("---")
+
+    
+
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+localhost# licensing view<br>
+<br>
+auto-update  :  not configured<br>
+ID           Label<br>
+---------   ---------<br>
+xxxxxxxxx  <None>    <br>
+
+</div>
+""", unsafe_allow_html=True)
+
+
+  
+    st.markdown("---")
+    st.subheader("フェーズ四：ISGconfigのリストア")
+    st.markdown("---")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px;">
+Appliance Serial Console<br>
+-------------------------- MENU ---------------------------<br>
+1) Command Line Interface<br>
+2) Setup console<br>
+-----------------------------------------------------------<br>
+Enter option: 1
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.write("ステップ1: CLIでenableパスワードでログインします(confは入れない)。")
+    st.markdown("""
+<div style="background-color: #000000; color: #00FF00; padding: 15px; font-family: monospace; border-radius: 5px; line-height: 1.5;">
+
+consoleuser connected from 127.0.0.1 using console on localhost<br>
+localhost&gt; en<br>
+Password:<br>
+localhost#<br>
+
+</div>
+""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.write("ステップ2: 作成済みコマンドをターミナルに貼り付けして、実行します。")
+    i_command = st.session_state.get('isg_command', '未検出')
+    st.code(f"\n{i_command}")   
+    st.write("ステップ3: エラー時はSynnexへ連絡します。")
+    st.write("""
+### ステップ4: リストア後の設定確認とログ保存
+
+リストア完了後、システム整合性を確認するために以下のコマンドを順番に発行してください。
+取得した全ての出力結果を統合し、`isg_after_resore.txt` というファイル名で保存してください。
+
+---
+#### **実行コマンドリスト**
+1. `show json-config`
+2. `show running-config | nomore`
+3. `health-monitoring view settings`
+4. `show applications event-log view configuration`
+5. `lag view`
+---
+""")
