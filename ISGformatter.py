@@ -1235,7 +1235,7 @@ def get_interface_0_0_info(file_content):
     return "interface 0:0 の情報が見つかりませんでした。"
 
 
-with tab5:  # 5番目のタブを指定
+with tab4:  # 5番目のタブを指定
     st.header("📋 ISG設定をリストアする手順")
     
     st.markdown("### 準備作業")
@@ -1578,7 +1578,7 @@ localhost#<br>
     # ==========================================
 # 4ページ目：SGOS情報確認
 # ==========================================
-with tab4:
+with tab5:
     st.header("🔍 SGOS 情報確認")
 
     # 1. ファイルアップロード
