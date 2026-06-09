@@ -1194,7 +1194,7 @@ with tab3:
      
     combined_ordered_list = []
     # NICを最後（otherの後）に移動
-    order_keys = ["snmp", "lag", "hm", "ntp", "proxy", "smtp", "tz", "lic", "mach", "acl", "other", "nic"]
+    order_keys = ["smtp","snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "acl", "other", "nic"]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
