@@ -1211,6 +1211,14 @@ localhost(config-local-user-list-local-users)# edit user {user} password
             for line in other_extracted_lines:
                 if line.lower().startswith("nacm groups group admin"):
                     continue
+                if line.lower().startswith("min-change"):
+                    continue
+                if line.lower().startswith("configuration-management"):
+                    continue
+                if line.lower().startswith("automated-backups"):
+                    continue
+                if line.lower().startswith("max-storage-space"):
+                    continue
                 if line.lower().startswith("smtp"):
                     continue
                 if line.lower().startswith("gateway"):
