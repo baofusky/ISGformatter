@@ -234,7 +234,7 @@ with tab1:
         local_user_text = "\n".join(local_user_list) if local_user_list else "対象ユーザーは検出されませんでした。"
         show_custom_area("抽出されたローカルユーザー (admin以外)", local_user_text, 150, "local_users", "local_users.txt")
         local_user_cmds = []
-        for username in detected_users:
+        for username in local_user_list:
             local_user_cmds.extend([
                 "authentication",
                 "edit local-user-list local-users",
