@@ -111,7 +111,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
     "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
-    "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": "","eventlog": ""
+    "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": "","eventlog": "","localuser": ""
 }
 
 # ==========================================
@@ -233,6 +233,18 @@ with tab1:
         # 抽出結果の表示
         local_user_text = "\n".join(local_user_list) if local_user_list else "対象ユーザーは検出されませんでした。"
         show_custom_area("抽出されたローカルユーザー (admin以外)", local_user_text, 150, "local_users", "local_users.txt")
+        local_user_cmds = []
+        for username in detected_users:
+            local_user_cmds.extend([
+                "authentication",
+                "edit local-user-list local-users",
+                f"create user name {username}",
+                f"edit user {username} add admin",
+                "exit"
+            ])
+            
+        local_user_add_commands = "\n".join(local_user_cmds)
+        all_generated_cmds_dict["localuser"] = local_user_add_commands
         
         # 警告文
         st.warning("⚠️ **警告: ローカルユーザーはadmin以外、以下の方法で手動で追加する必要があります。**")
@@ -1317,7 +1329,7 @@ with tab3:
      
     combined_ordered_list = []
     # NICを最後（otherの後）に移動
-    order_keys = ["smtp","snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "acl", "other", "nic","eventlog" ]
+    order_keys = ["smtp","snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "acl", "other", "nic","eventlog", "localuser"]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
