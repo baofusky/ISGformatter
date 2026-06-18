@@ -111,7 +111,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 # 一括出力用コマンドの格納辞書を初期化
 all_generated_cmds_dict = {
     "snmp": "", "lag": "", "hm": "", "ntp": "", "proxy": "", "smtp": "",
-    "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": "","eventlog": "","localuser": ""  
+    "tz": "", "lic": "", "mach": "", "nic": "", "acl": "", "other": "","eventlog": ""
 }
 
 # ==========================================
@@ -232,35 +232,25 @@ with tab1:
         
         # 抽出結果の表示
         local_user_text = "\n".join(local_user_list) if local_user_list else "対象ユーザーは検出されませんでした。"
-       
-        local_user_cmds = []
-		
-        for username in local_user_list:   
-
-          local_user_cmds.extend([  
-           "authentication",
-           "edit local-user-list local-users",
-           f"create user name {username}",
-           f"edit user {username} add admin",
-           "exit"
-           ])
-		  
-		local_user_add_commands = "\n".join(local_user_cmds)
-
-        all_generated_cmds_dict["localuser"] = local_user_add_commands  
-
-        col_user1, col_user2 = st.columns(2)
-
-        with col_user1:
-         show_custom_area("ローカルユーザー設定",local_user_text,220,"localuser","localuser.txt")
-
-        with col_user2:
-         show_custom_area("ユーザー追加コマンド",local_user_add_commands,220,"localuser_cmd","localuser_commands.txt")
-   
+        show_custom_area("抽出されたローカルユーザー (admin以外)", local_user_text, 150, "local_users", "local_users.txt")
+        
         # 警告文
-        st.warning("⚠️ **警告: ローカルユーザーはadmin以外、パスワードは手動で変更する必要があります。edit user {user} password")
+        st.warning("⚠️ **警告: ローカルユーザーはadmin以外、以下の方法で手動で追加する必要があります。**")
         
-        
+        if local_user_list:
+            # 抽出された全ユーザー分をまとめて警告文としてループ出力
+            for user in local_user_list:
+                st.code(f"""
+localhost(config)# authentication
+localhost(config-authentication)# edit local-user-list local-users
+localhost(config-local-user-list-local-users)# create user
+Value for 'name' (<string>): {user}
+  ok
+localhost(config-local-user-list-local-users)# edit user {user} add admin
+localhost(config-local-user-list-local-users)# edit user {user} password
+                """, language="text")
+        else:
+            st.info("追加設定が必要な対象ユーザーはいません。")
 
         st.markdown("---")
                # --------------------------------------
@@ -1327,7 +1317,7 @@ with tab3:
      
     combined_ordered_list = []
     # NICを最後（otherの後）に移動
-    order_keys = ["smtp","snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "acl", "other", "nic","eventlog","localuser"  ]
+    order_keys = ["smtp","snmp", "lag", "hm", "ntp", "proxy", "tz", "lic", "mach", "acl", "other", "nic","eventlog" ]
     
     for key in order_keys:
         cmd_content = all_generated_cmds_dict.get(key, "").strip()
